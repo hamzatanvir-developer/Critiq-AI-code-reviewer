@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 import CodeEditor from "@/components/CodeEditor";
 import ReviewCard from "@/components/ReviewCard";
@@ -12,12 +12,19 @@ import { saveReview } from "@/services/historyService";
 export default function HomePage() {
   const { user, loading: authLoading } = useContext(AuthContext);
   const router = useRouter();
+  const reviewRef = useRef(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [analyzedCode, setAnalyzedCode] = useState("");
   const [analyzedLanguage, setAnalyzedLanguage] = useState("");
+
+  useEffect(() => {
+    if (result && reviewRef.current) {
+      reviewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [result]);
 
   async function handleAnalyze(code, language) {
     setLoading(true);
@@ -144,11 +151,13 @@ export default function HomePage() {
           )}
 
           {result && (
-            <ReviewCard
-              result={result}
-              onSave={handleSave}
-              isSaving={isSaving}
-            />
+            <div ref={reviewRef}>
+              <ReviewCard
+                result={result}
+                onSave={handleSave}
+                isSaving={isSaving}
+              />
+            </div>
           )}
         </div>
       </div>
