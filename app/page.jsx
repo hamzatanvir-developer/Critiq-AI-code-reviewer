@@ -129,8 +129,8 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-gray-950 px-4 py-12 text-white sm:px-6">
       <div className="mx-auto w-full max-w-5xl pt-28 pb-12">
-        {result ? (
-          <div className="space-y-8">
+        <div className={result ? "space-y-8" : "flex min-h-[calc(100vh-6rem)] items-center justify-center"}>
+          <div className={result ? "w-full space-y-8" : "w-full"}>
             <CodeEditor onAnalyze={handleAnalyze} loading={loading} />
 
             {error && (
@@ -142,30 +142,17 @@ export default function HomePage() {
               </p>
             )}
 
-            <div id="review-section">
-              <ReviewCard
-                result={result}
-                onSave={handleSave}
-                isSaving={isSaving}
-              />
-            </div>
+            {result && (
+              <div id="review-section">
+                <ReviewCard
+                  result={result}
+                  onSave={handleSave}
+                  isSaving={isSaving}
+                />
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="flex min-h-[calc(100vh-6rem)] items-center justify-center">
-            <div className="w-full">
-              <CodeEditor onAnalyze={handleAnalyze} loading={loading} />
-
-              {error && (
-                <p
-                  role="alert"
-                  className="rounded-lg border border-red-900/60 bg-red-950/40 px-4 py-3 text-center text-sm text-red-400"
-                >
-                  {error}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </main>
   );
