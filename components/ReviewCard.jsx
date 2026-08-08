@@ -30,6 +30,18 @@ export default function ReviewCard({ result, onSave, isSaving }) {
     return navigator.clipboard.writeText(result.refactoredCode ?? "");
   }
 
+  const complexity = result.complexity ?? { level: "Simple", score: 1, reasons: [] };
+  const complexityBadgeStyles = {
+    Simple: "bg-green-900/20 text-green-400 border border-green-900/30",
+    Moderate: "bg-yellow-900/20 text-yellow-400 border border-yellow-900/30",
+    Complex: "bg-red-900/20 text-red-400 border border-red-900/30",
+  };
+  const complexityBarStyles = {
+    Simple: "w-[33%] bg-green-400",
+    Moderate: "w-[66%] bg-yellow-400",
+    Complex: "w-full bg-red-400",
+  };
+
   function renderItem(item, index) {
     if (activeTab === "Bugs") {
       const severity = item.severity?.toLowerCase();
@@ -88,6 +100,34 @@ export default function ReviewCard({ result, onSave, isSaving }) {
         <p className="mx-auto mb-8 max-w-2xl italic leading-relaxed text-zinc-400">
           {result.summary}
         </p>
+      </div>
+
+      <div className="mb-6 rounded-xl border border-zinc-800/60 bg-[#13131a] p-4">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-sm font-medium text-zinc-300">Complexity</span>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${complexityBadgeStyles[complexity.level] ?? complexityBadgeStyles.Simple}`}
+          >
+            {complexity.level}
+          </span>
+        </div>
+
+        <div className="mt-2 h-1.5 w-full rounded-full bg-zinc-800">
+          <div
+            className={`h-full rounded-full transition-all ${complexityBarStyles[complexity.level] ?? complexityBarStyles.Simple}`}
+          />
+        </div>
+
+        {Array.isArray(complexity.reasons) && complexity.reasons.length > 0 ? (
+          <ul className="mt-3 space-y-1 text-sm text-zinc-500">
+            {complexity.reasons.map((reason, index) => (
+              <li key={index} className="flex items-start gap-2">
+                <span className="mt-2 h-1 w-1 rounded-full bg-zinc-500" />
+                <span>{reason}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
 
       <div className="mb-6 border-b border-purple-900/20">

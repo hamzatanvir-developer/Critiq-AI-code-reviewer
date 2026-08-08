@@ -36,10 +36,20 @@ function buildPrompt(code, language) {
   "performance": [{ "issue": "string", "suggestion": "string" }],
   "quality": [{ "issue": "string", "improvement": "string" }],
   "refactoredCode": "the improved version of the entire code with all fixes applied",
+  "complexity": {
+    "level": "Simple" or "Moderate" or "Complex",
+    "score": number from 1 to 10,
+    "reasons": ["reason 1", "reason 2", "reason 3"]
+  },
   "summary": "2-3 sentence summary of the code"
 }
 
 Also provide a refactoredCode field containing the complete rewritten version of the code with all bugs fixed, security issues resolved, and best practices applied. Keep the same language and functionality but improve the code quality.
+Also analyze the code complexity and return a complexity object with:
+- level: Simple (score 1-3), Moderate (score 4-6), or Complex (score 7-10)
+- score: complexity score from 1 to 10
+- reasons: array of 2-3 specific reasons explaining the complexity rating
+Consider: nesting depth, number of functions, loops, conditionals, and code length.
 
 If the code provided does not match the specified language, do not analyze it.
 Instead return this exact JSON:
@@ -50,6 +60,11 @@ Instead return this exact JSON:
   "performance": [],
   "quality": [],
   "refactoredCode": "",
+  "complexity": {
+    "level": "Simple",
+    "score": 1,
+    "reasons": []
+  },
   "summary": "The code does not match the selected language. Please paste valid ${language} code and select the correct language."
 }
 
