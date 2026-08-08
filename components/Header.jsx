@@ -16,32 +16,35 @@ export default function Header() {
   }
 
   return (
-    <header className="border-b border-gray-800 bg-gray-950 text-white">
-      <nav className="mx-auto grid h-16 w-full max-w-7xl grid-cols-3 items-center px-6">
-        <Link href="/" className="text-xl font-semibold tracking-tight">
+    <header className="border-b border-purple-900/30 bg-[#0d0d0f] text-white">
+      <nav className="flex w-full items-center justify-between px-6 py-4">
+        <Link
+          href="/"
+          className="font-space text-xl font-bold tracking-tight bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent"
+        >
           Critiq
         </Link>
 
-        <div className="flex items-center justify-center gap-6 text-sm text-gray-300">
-          <Link href="/" className="transition-colors hover:text-white">
+        <div className="flex items-center gap-6 text-sm text-zinc-400">
+          <Link href="/" className="transition-colors hover:text-purple-400">
             Home
           </Link>
           <Link
             href="/history"
-            className="transition-colors hover:text-white"
+            className="transition-colors hover:text-purple-400"
           >
             History
           </Link>
         </div>
 
-        <div className="flex items-center justify-end gap-4 text-sm">
+        <div className="flex items-center gap-4 text-sm">
           {user ? (
             <>
-              <span className="truncate text-gray-300">{user.email}</span>
+              <span className="truncate text-sm text-zinc-500">{user.email}</span>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-md border border-gray-700 px-3 py-2 transition-colors hover:bg-gray-800"
+                className="rounded-lg border border-purple-700 px-4 py-2 text-sm text-purple-400 transition-all hover:bg-purple-700 hover:text-white"
               >
                 Logout
               </button>
@@ -49,7 +52,7 @@ export default function Header() {
           ) : (
             <Link
               href="/auth"
-              className="rounded-md border border-gray-700 px-3 py-2 transition-colors hover:bg-gray-800"
+              className="rounded-lg border border-purple-700 px-4 py-2 text-sm text-purple-400 transition-all hover:bg-purple-700 hover:text-white"
             >
               Login
             </Link>
