@@ -78,37 +78,71 @@ export default function HomePage() {
   }
 
   if (!user) {
-    return (
-      <main className="flex min-h-screen flex-col bg-[#0d0d0f] text-white">
-        <section className="flex flex-1 flex-col items-center justify-center px-4 text-center">
-          <h1 className="mb-4 text-5xl font-bold leading-tight text-white md:text-7xl font-space">
-            AI-powered code review
-            <br />
-            for every <span className="bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">developer.</span>
-          </h1>
+    const headingText = "AI-powered code review for every developer.";
+    const words = headingText.split(" ");
 
-          <p className="mb-8 max-w-xl text-lg text-zinc-400">
+    return (
+      <main className="flex min-h-screen flex-col bg-[#111111] text-[#f5f5f5]">
+        <section className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+          <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight mb-4 text-center">
+  <span className="block">
+    {"AI-powered code".split("").map((char, i) => (
+      <span key={i} className="inline-block" style={{ animation: "wave 2s ease-in-out infinite", animationDelay: `${i * 0.04}s` }}>
+        {char === ' ' ? '\u00A0' : char}
+      </span>
+    ))}
+  </span>
+  <span className="block">
+    {"review for every".split("").map((char, i) => (
+      <span key={i + 50} className="inline-block" style={{ animation: "wave 2s ease-in-out infinite", animationDelay: `${(i + 16) * 0.04}s` }}>
+        {char === ' ' ? '\u00A0' : char}
+      </span>
+    ))}
+  </span>
+  <span className="block text-green-400">
+    {"developer.".split("").map((char, i) => (
+      <span key={i + 100} className="inline-block" style={{ animation: "wave 2s ease-in-out infinite", animationDelay: `${(i + 33) * 0.04}s` }}>
+        {char}
+      </span>
+    ))}
+  </span>
+</h1>
+
+          <p className="mb-8 max-w-xl text-lg text-[#a0a0a0]">
             Paste your code. Get instant feedback on bugs, security, performance,
-            and quality. Powered by Google Gemini AI.
+            and quality.
           </p>
 
           <div className="relative w-full overflow-hidden my-8 py-2">
-            <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#0d0d0f] to-transparent z-10" />
-            <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#0d0d0f] to-transparent z-10" />
+            <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#111111] to-transparent z-10" />
+            <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#111111] to-transparent z-10" />
             <div className="flex gap-16 ticker-track">
               {['JavaScript', 'Python', 'Java', 'C++', 'React',
                 'JavaScript', 'Python', 'Java', 'C++', 'React',
-                'JavaScript', 'Python', 'Java', 'C++', 'React'].map((lang, i) => (
-                <span key={i} className="flex items-center gap-2 text-zinc-400 text-sm font-medium whitespace-nowrap shrink-0">
-                  <span className={`w-2 h-2 rounded-full ${
-                    lang === 'JavaScript' ? 'bg-yellow-400' :
-                    lang === 'Python' ? 'bg-blue-400' :
-                    lang === 'Java' ? 'bg-orange-400' :
-                    lang === 'C++' ? 'bg-cyan-400' : 'bg-sky-400'
-                  }`} />
+                'JavaScript', 'Python', 'Java', 'C++', 'React'].map((lang, i) => {
+                const languageStyles = {
+                  JavaScript: 'text-yellow-400',
+                  Python: 'text-blue-400',
+                  Java: 'text-orange-400',
+                  'C++': 'text-cyan-400',
+                  React: 'text-sky-400',
+                };
+
+                const dotStyles = {
+                  JavaScript: 'bg-yellow-400',
+                  Python: 'bg-blue-400',
+                  Java: 'bg-orange-400',
+                  'C++': 'bg-cyan-400',
+                  React: 'bg-sky-400',
+                };
+
+                return (
+                <span key={i} className={`flex items-center gap-2 text-sm font-medium whitespace-nowrap shrink-0 ${languageStyles[lang]}`}>
+                  <span className={`w-2 h-2 rounded-full ${dotStyles[lang]}`} />
                   {lang}
                 </span>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -116,7 +150,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => router.push("/auth")}
-              className="rounded-lg bg-purple-700 px-10 py-4 text-lg font-semibold text-white transition-all hover:bg-purple-600"
+              className="rounded-lg bg-[#f5f5f5] px-10 py-4 text-lg font-bold text-[#111111] transition-all hover:bg-[#e0e0e0]"
             >
               Get Started Free
             </button>
@@ -127,7 +161,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-950 px-4 py-12 text-white sm:px-6">
+    <main className="min-h-screen bg-[#111111] px-4 py-12 text-white sm:px-6">
       <div className="mx-auto w-full max-w-5xl pt-28 pb-12">
         <div className={result ? "space-y-8" : "flex min-h-[calc(100vh-6rem)] items-center justify-center"}>
           <div className={result ? "w-full space-y-8" : "w-full"}>

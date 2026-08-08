@@ -37,7 +37,7 @@ export default function ReviewCard({ result, onSave, isSaving }) {
     return (
       <div
         key={index}
-        className={`flex items-start gap-3 rounded-lg bg-[#13131a] p-4 mb-2 ${
+        className={`mb-2 flex items-start gap-3 rounded-lg bg-[#161616] p-4 ${
           isPass ? "border-l-2 border-green-600" : "border-l-2 border-red-600"
         }`}
       >
@@ -69,7 +69,7 @@ export default function ReviewCard({ result, onSave, isSaving }) {
       const severity = item.severity?.toLowerCase();
 
       return (
-        <article key={index} className="mb-3 rounded-lg border-l-4 border-purple-600 bg-[#13131a] p-4">
+        <article key={index} className="mb-3 rounded-lg border-l-4 border-[#3a3a3a] bg-[#161616] p-4">
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <span
               className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${severityStyles[severity] ?? severityStyles.low}`}
@@ -100,7 +100,7 @@ export default function ReviewCard({ result, onSave, isSaving }) {
           : "Improvement";
 
     return (
-      <article key={index} className="mb-3 rounded-lg border-l-4 border-purple-600 bg-[#13131a] p-4">
+      <article key={index} className="mb-3 rounded-lg border-l-4 border-[#3a3a3a] bg-[#161616] p-4">
         <p className="mb-1 font-medium text-white">{item.issue}</p>
         <p className="text-sm leading-6 text-zinc-400">
           <span className="font-medium text-zinc-300">{detailLabel}:</span>{" "}
@@ -111,7 +111,7 @@ export default function ReviewCard({ result, onSave, isSaving }) {
   }
 
   return (
-    <section className="mx-auto w-full max-w-4xl rounded-2xl border border-purple-900/30 bg-[#1a1a2e] p-8 text-white shadow-[0_0_40px_rgba(124,58,237,0.1)] animate-fade-in">
+    <section className="mx-auto w-full max-w-4xl animate-fade-in rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-8 text-white shadow-[0_0_40px_rgba(0,0,0,0.15)]">
       <div className="flex flex-col items-center text-center">
         <div
           className={`mx-auto mb-6 flex h-32 w-32 flex-col items-center justify-center rounded-full border-4 glow-pulse ${scoreColor}`}
@@ -124,7 +124,7 @@ export default function ReviewCard({ result, onSave, isSaving }) {
         </p>
       </div>
 
-      <div className="mb-6 rounded-xl border border-zinc-800/60 bg-[#13131a] p-4">
+      <div className="mb-6 rounded-xl border border-[#2a2a2a] bg-[#161616] p-4">
         <div className="flex items-center justify-between gap-4">
           <span className="text-base font-semibold text-white">Complexity</span>
           <span
@@ -152,7 +152,7 @@ export default function ReviewCard({ result, onSave, isSaving }) {
         ) : null}
       </div>
 
-      <div className="mb-6 border-b border-purple-900/20">
+      <div className="mb-6 border-b border-[#2a2a2a]">
         <div className="flex gap-6 overflow-x-auto" role="tablist">
           {tabs.map((tab) => (
             <button
@@ -163,7 +163,7 @@ export default function ReviewCard({ result, onSave, isSaving }) {
               onClick={() => setActiveTab(tab)}
               className={`pb-3 text-sm font-medium transition-colors ${
                 activeTab === tab
-                  ? "border-b-2 border-purple-500 text-purple-400"
+                  ? "border-b-2 border-[#f5f5f5] text-[#f5f5f5]"
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
@@ -180,17 +180,17 @@ export default function ReviewCard({ result, onSave, isSaving }) {
               {bestPractices.map(renderBestPractice)}
             </div>
           ) : (
-            <p className="rounded-lg border border-purple-900/20 bg-[#13131a] py-10 text-center text-zinc-500">
+            <p className="rounded-lg border border-[#2a2a2a] bg-[#161616] py-10 text-center text-zinc-500">
               No issues found
             </p>
           )
         ) : activeTab === "Refactored" ? (
-          <div className="rounded-lg border border-purple-900/20 bg-[#13131a] p-5">
+          <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] p-5">
             <div className="mb-4 flex items-center justify-between gap-4">
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <h3 className="text-lg font-semibold text-white">Improved Code</h3>
-                  <span className="rounded-full border border-purple-900/30 bg-purple-900/20 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-purple-300">
+                  <span className="rounded-full border border-[#3a3a3a] bg-[#111111] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#a0a0a0]">
                     AI Rewritten
                   </span>
                 </div>
@@ -198,14 +198,14 @@ export default function ReviewCard({ result, onSave, isSaving }) {
               <button
                 type="button"
                 onClick={copyCode}
-                className="rounded-lg border border-zinc-700 bg-[#0d0d0f] px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-purple-900/40 hover:text-white"
+                className="rounded-lg border border-[#3a3a3a] bg-[#111111] px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-[#f5f5f5] hover:text-white"
               >
                 Copy Code
               </button>
             </div>
 
             {result.refactoredCode && result.refactoredCode.trim().length > 0 ? (
-              <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl bg-[#0d0d0f] p-6 font-mono text-sm text-green-400">
+              <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl bg-[#111111] p-6 font-mono text-sm text-green-400">
                 <code>{result.refactoredCode}</code>
               </pre>
             ) : (
@@ -217,17 +217,17 @@ export default function ReviewCard({ result, onSave, isSaving }) {
         ) : activeItems.length > 0 ? (
           activeItems.map(renderItem)
         ) : (
-          <p className="rounded-lg border border-purple-900/20 bg-[#13131a] py-10 text-center text-zinc-500">
+            <p className="rounded-lg border border-[#2a2a2a] bg-[#161616] py-10 text-center text-zinc-500">
             No issues found
           </p>
         )}
       </div>
 
-      <div className="mt-8 flex flex-wrap justify-end gap-3 border-t border-purple-900/20 pt-6">
+      <div className="mt-8 flex flex-wrap justify-end gap-3 border-t border-[#2a2a2a] pt-6">
         <button
           type="button"
           onClick={copyReport}
-          className="rounded-lg border border-zinc-700 bg-[#13131a] px-6 py-2 text-zinc-400 transition-colors hover:text-white"
+          className="rounded-lg border border-[#3a3a3a] bg-[#161616] px-6 py-2 text-zinc-400 transition-colors hover:text-white"
         >
           Copy Report
         </button>
@@ -235,7 +235,7 @@ export default function ReviewCard({ result, onSave, isSaving }) {
           type="button"
           onClick={onSave}
           disabled={isSaving}
-          className="rounded-lg bg-purple-700 px-6 py-2 text-white transition-colors hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-80"
+          className="rounded-lg bg-[#f5f5f5] px-6 py-2 text-[#111111] transition-colors hover:bg-[#e0e0e0] disabled:cursor-not-allowed disabled:opacity-80"
         >
           {isSaving ? "Saving..." : "Save Review"}
         </button>

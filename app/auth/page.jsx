@@ -50,10 +50,10 @@ export default function AuthPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#0d0d0f] px-4 text-white">
-      <section className="w-full max-w-md rounded-2xl border border-purple-900/30 bg-[#1a1a2e] p-8 shadow-[0_0_40px_rgba(124,58,237,0.1)]">
+    <main className="flex min-h-screen items-center justify-center bg-[#111111] px-4 text-white">
+      <section className="w-full max-w-md rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-8 shadow-[0_0_40px_rgba(0,0,0,0.15)]">
         <div className="text-center">
-          <h1 className="font-space text-3xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="font-space text-3xl font-bold bg-gradient-to-r from-[#f5f5f5] to-[#a0a0a0] bg-clip-text text-transparent">
             Critiq
           </h1>
           <p className="mt-2 text-center text-sm text-zinc-400">
@@ -64,14 +64,14 @@ export default function AuthPage() {
         </div>
 
         <div className="mt-6 flex justify-center">
-          <div className="inline-flex rounded-xl border border-purple-900/30 bg-[#0d0d0f] p-1">
+          <div className="inline-flex rounded-xl border border-[#2a2a2a] bg-[#111111] p-1">
             <button
               type="button"
               onClick={() => !isLogin && toggleMode()}
               disabled={loading}
               className={`rounded-lg px-4 py-2 text-sm transition-colors ${
                 isLogin
-                  ? "bg-purple-700 text-white"
+                  ? "bg-[#f5f5f5] text-[#111111]"
                   : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -83,7 +83,7 @@ export default function AuthPage() {
               disabled={loading}
               className={`rounded-lg px-4 py-2 text-sm transition-colors ${
                 !isLogin
-                  ? "bg-purple-700 text-white"
+                  ? "bg-[#f5f5f5] text-[#111111]"
                   : "text-zinc-400 hover:text-white"
               }`}
             >
@@ -104,7 +104,7 @@ export default function AuthPage() {
               onChange={(event) => setEmail(event.target.value)}
               autoComplete="email"
               required
-              className="w-full rounded-lg border border-purple-900/30 bg-[#0d0d0f] px-4 py-3 text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-purple-500"
+              className="w-full rounded-lg border border-[#2a2a2a] bg-[#111111] px-4 py-3 text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-[#f5f5f5]"
             />
           </div>
 
@@ -122,7 +122,7 @@ export default function AuthPage() {
               onChange={(event) => setPassword(event.target.value)}
               autoComplete={isLogin ? "current-password" : "new-password"}
               required
-              className="w-full rounded-lg border border-purple-900/30 bg-[#0d0d0f] px-4 py-3 text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-purple-500"
+              className="w-full rounded-lg border border-[#2a2a2a] bg-[#111111] px-4 py-3 text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-[#f5f5f5]"
             />
           </div>
 
@@ -141,7 +141,7 @@ export default function AuthPage() {
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 autoComplete="new-password"
                 required
-                className="w-full rounded-lg border border-purple-900/30 bg-[#0d0d0f] px-4 py-3 text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-purple-500"
+                className="w-full rounded-lg border border-[#2a2a2a] bg-[#111111] px-4 py-3 text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-[#f5f5f5]"
               />
             </div>
           )}
@@ -149,7 +149,7 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-purple-800 py-3 font-semibold text-white transition-all hover:from-purple-500 hover:to-purple-700 disabled:cursor-not-allowed disabled:opacity-80"
+            className="w-full rounded-lg bg-[#f5f5f5] py-3 font-semibold text-[#111111] transition-all hover:bg-[#e0e0e0] disabled:cursor-not-allowed disabled:opacity-80"
           >
             {loading ? "Loading..." : isLogin ? "Login" : "Register"}
           </button>
