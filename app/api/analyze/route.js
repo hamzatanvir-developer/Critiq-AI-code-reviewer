@@ -38,6 +38,17 @@ function buildPrompt(code, language) {
   "summary": "2-3 sentence summary of the code"
 }
 
+If the code provided does not match the specified language, do not analyze it.
+Instead return this exact JSON:
+{
+  "overallScore": 0,
+  "bugs": [],
+  "security": [],
+  "performance": [],
+  "quality": [],
+  "summary": "The code does not match the selected language. Please paste valid ${language} code and select the correct language."
+}
+
 Code to analyze:
 ${code}`;
 }

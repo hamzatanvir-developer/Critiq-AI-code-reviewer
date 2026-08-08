@@ -37,9 +37,9 @@ export default function HomePage() {
       setResult(analysis);
       setTimeout(() => {
         document
-          .getElementById('review-result')
+          .getElementById('review-section')
           ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      }, 200);
     } catch {
       setError("Unable to analyze the code. Please try again.");
     } finally {
@@ -131,30 +131,28 @@ export default function HomePage() {
       <div className="mx-auto w-full max-w-5xl">
         {result ? (
           <div className="space-y-8">
-            <div id="review-result">
+            <CodeEditor onAnalyze={handleAnalyze} loading={loading} />
+
+            {error && (
+              <p
+                role="alert"
+                className="rounded-lg border border-red-900/60 bg-red-950/40 px-4 py-3 text-center text-sm text-red-400"
+              >
+                {error}
+              </p>
+            )}
+
+            <div id="review-section">
               <ReviewCard
                 result={result}
                 onSave={handleSave}
                 isSaving={isSaving}
               />
             </div>
-
-            <div className="space-y-8">
-              <CodeEditor onAnalyze={handleAnalyze} loading={loading} />
-
-              {error && (
-                <p
-                  role="alert"
-                  className="rounded-lg border border-red-900/60 bg-red-950/40 px-4 py-3 text-center text-sm text-red-400"
-                >
-                  {error}
-                </p>
-              )}
-            </div>
           </div>
         ) : (
           <div className="flex min-h-[calc(100vh-6rem)] items-center justify-center">
-            <div className="w-full space-y-8">
+            <div className="w-full">
               <CodeEditor onAnalyze={handleAnalyze} loading={loading} />
 
               {error && (
