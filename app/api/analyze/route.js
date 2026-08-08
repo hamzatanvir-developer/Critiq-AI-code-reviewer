@@ -41,6 +41,13 @@ function buildPrompt(code, language) {
     "score": number from 1 to 10,
     "reasons": ["reason 1", "reason 2", "reason 3"]
   },
+  "bestPractices": [
+    {
+      "rule": "rule name",
+      "status": "pass" or "fail",
+      "description": "explanation"
+    }
+  ],
   "summary": "2-3 sentence summary of the code"
 }
 
@@ -50,6 +57,17 @@ Also analyze the code complexity and return a complexity object with:
 - score: complexity score from 1 to 10
 - reasons: array of 2-3 specific reasons explaining the complexity rating
 Consider: nesting depth, number of functions, loops, conditionals, and code length.
+Also check language-specific best practices and return a bestPractices array.
+For JavaScript/React check: proper variable naming (camelCase), no var usage,
+arrow functions, error handling, no console.logs in production code.
+For Python check: PEP8 naming conventions, docstrings present, no bare except,
+proper indentation, type hints.
+For Java check: class naming (PascalCase), method naming (camelCase),
+proper access modifiers, exception handling.
+For C++ check: memory management, header guards, naming conventions,
+avoid global variables.
+Return 5 best practice checks relevant to the detected language.
+Each with status pass or fail and a short description.
 
 If the code provided does not match the specified language, do not analyze it.
 Instead return this exact JSON:
@@ -65,6 +83,7 @@ Instead return this exact JSON:
     "score": 1,
     "reasons": []
   },
+  "bestPractices": [],
   "summary": "The code does not match the selected language. Please paste valid ${language} code and select the correct language."
 }
 

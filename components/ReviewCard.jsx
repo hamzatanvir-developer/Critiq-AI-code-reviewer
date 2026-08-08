@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const tabs = ["Bugs", "Security", "Performance", "Quality", "Refactored"];
+const tabs = ["Bugs", "Security", "Performance", "Quality", "Best Practices", "Refactored"];
 
 const severityStyles = {
   high: "bg-red-900/40 text-red-400",
@@ -21,6 +21,7 @@ export default function ReviewCard({ result, onSave, isSaving }) {
         : "border-green-500 text-green-500";
 
   const activeItems = result[activeTab.toLowerCase()] ?? [];
+  const bestPractices = result.bestPractices ?? [];
 
   function copyReport() {
     return navigator.clipboard.writeText(JSON.stringify(result, null, 2));
@@ -28,6 +29,27 @@ export default function ReviewCard({ result, onSave, isSaving }) {
 
   function copyCode() {
     return navigator.clipboard.writeText(result.refactoredCode ?? "");
+  }
+
+  function renderBestPractice(item, index) {
+    const isPass = item.status?.toLowerCase() === "pass";
+
+    return (
+      <div
+        key={index}
+        className={`flex items-start gap-3 rounded-lg bg-[#13131a] p-3 mb-2 ${
+          isPass ? "border-l-2 border-green-600" : "border-l-2 border-red-600"
+        }`}
+      >
+        <span className={isPass ? "text-green-400 text-base leading-none" : "text-red-400 text-base leading-none"}>
+          {isPass ? "✓" : "✗"}
+        </span>
+        <div>
+          <div className="text-sm font-medium text-white">{item.rule}</div>
+          <div className="mt-0.5 text-xs text-zinc-500">{item.description}</div>
+        </div>
+      </div>
+    );
   }
 
   const complexity = result.complexity ?? { level: "Simple", score: 1, reasons: [] };
@@ -152,7 +174,17 @@ export default function ReviewCard({ result, onSave, isSaving }) {
       </div>
 
       <div className="space-y-3" role="tabpanel">
-        {activeTab === "Refactored" ? (
+        {activeTab === "Best Practices" ? (
+          bestPractices.length > 0 ? (
+            <div>
+              {bestPractices.map(renderBestPractice)}
+            </div>
+          ) : (
+            <p className="rounded-lg border border-purple-900/20 bg-[#13131a] py-10 text-center text-zinc-500">
+              No issues found
+            </p>
+          )
+        ) : activeTab === "Refactored" ? (
           <div className="rounded-lg border border-purple-900/20 bg-[#13131a] p-5">
             <div className="mb-4 flex items-center justify-between gap-4">
               <div>
