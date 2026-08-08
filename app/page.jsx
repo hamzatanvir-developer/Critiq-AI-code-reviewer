@@ -92,38 +92,19 @@ export default function HomePage() {
             and quality. Powered by Google Gemini AI.
           </p>
 
-          <div className="my-8 w-full overflow-hidden border-y border-purple-900/20 py-3">
-            <div className="ticker-track flex gap-16 whitespace-nowrap">
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
-                <span className="h-2 w-2 rounded-full bg-yellow-400" />JavaScript
-              </div>
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
-                <span className="h-2 w-2 rounded-full bg-blue-400" />Python
-              </div>
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
-                <span className="h-2 w-2 rounded-full bg-orange-400" />Java
-              </div>
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
-                <span className="h-2 w-2 rounded-full bg-cyan-400" />C++
-              </div>
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
-                <span className="h-2 w-2 rounded-full bg-sky-400" />React
-              </div>
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
-                <span className="h-2 w-2 rounded-full bg-yellow-400" />JavaScript
-              </div>
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
-                <span className="h-2 w-2 rounded-full bg-blue-400" />Python
-              </div>
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
-                <span className="h-2 w-2 rounded-full bg-orange-400" />Java
-              </div>
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
-                <span className="h-2 w-2 rounded-full bg-cyan-400" />C++
-              </div>
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
-                <span className="h-2 w-2 rounded-full bg-sky-400" />React
-              </div>
+          <div className="relative my-8 w-full max-w-2xl mx-auto overflow-hidden py-3 border-y border-purple-900/20">
+            <div className="flex gap-16 ticker-track">
+              {['JavaScript', 'Python', 'Java', 'C++', 'React', 'JavaScript', 'Python', 'Java', 'C++', 'React'].map((lang, i) => (
+                <span key={i} className="flex items-center gap-2 text-zinc-400 text-sm font-medium whitespace-nowrap">
+                  <span className={`w-2 h-2 rounded-full ${
+                    lang === 'JavaScript' ? 'bg-yellow-400' :
+                    lang === 'Python' ? 'bg-blue-400' :
+                    lang === 'Java' ? 'bg-orange-400' :
+                    lang === 'C++' ? 'bg-cyan-400' : 'bg-sky-400'
+                  }`} />
+                  {lang}
+                </span>
+              ))}
             </div>
           </div>
 

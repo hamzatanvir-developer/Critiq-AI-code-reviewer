@@ -24,7 +24,8 @@
 }
 
 .ticker-track {
-	animation: ticker 20s linear infinite;
+	animation: ticker 15s linear infinite;
+	display: flex;
 }
 
 @keyframes fadeInUp {
