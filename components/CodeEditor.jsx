@@ -22,17 +22,20 @@ export default function CodeEditor({ onAnalyze, loading }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full space-y-4 rounded-xl border border-gray-800 bg-gray-950 p-6 text-white"
+      className="mx-auto w-full max-w-4xl overflow-hidden rounded-2xl border border-purple-900/30 bg-[#1a1a2e] text-white shadow-[0_0_40px_rgba(124,58,237,0.1)]"
     >
-      <div className="flex items-center justify-between gap-4">
-        <label htmlFor="language" className="text-sm font-medium text-gray-300">
+      <div className="flex items-center justify-between border-b border-purple-900/20 bg-[#13131a] px-4 py-3">
+        <label
+          htmlFor="language"
+          className="relative h-3 w-14 shrink-0 overflow-hidden text-transparent before:absolute before:left-0 before:top-0 before:h-3 before:w-3 before:rounded-full before:bg-red-500 after:absolute after:right-0 after:top-0 after:h-3 after:w-3 after:rounded-full after:bg-green-500 bg-[radial-gradient(circle_at_center,_#eab308_0_6px,_transparent_7px)] bg-no-repeat"
+        >
           Language
         </label>
         <select
           id="language"
           value={language}
           onChange={(event) => setLanguage(event.target.value)}
-          className="rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-gray-500"
+          className="rounded-lg border border-purple-900/30 bg-[#0d0d0f] px-3 py-1 text-sm text-purple-400 outline-none"
         >
           {languages.map((option) => (
             <option key={option} value={option}>
@@ -42,10 +45,10 @@ export default function CodeEditor({ onAnalyze, loading }) {
         </select>
       </div>
 
-      <div className="flex min-h-[300px] overflow-hidden rounded-lg border border-gray-800 bg-gray-900 focus-within:border-gray-600">
+      <div className="flex overflow-hidden bg-[#0d0d0f]">
         <div
           aria-hidden="true"
-          className="w-14 shrink-0 overflow-hidden border-r border-gray-800 bg-gray-950 text-right font-mono text-sm leading-6 text-gray-500"
+          className="hidden w-14 shrink-0 overflow-hidden border-r border-purple-900/20 bg-[#13131a] text-right font-mono text-sm leading-6 text-zinc-500"
         >
           <pre
             className="px-3 py-4"
@@ -61,15 +64,15 @@ export default function CodeEditor({ onAnalyze, loading }) {
           onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
           placeholder="Paste your code here..."
           spellCheck="false"
-          className="min-h-[300px] flex-1 resize-y bg-gray-900 p-4 font-mono text-sm leading-6 text-white outline-none placeholder:text-gray-500"
+          className="w-full min-h-[400px] resize-none bg-[#0d0d0f] p-6 font-mono text-sm leading-relaxed text-green-400 outline-none placeholder:text-zinc-700"
         />
       </div>
 
-      <div className="flex justify-end">
+      <div className="border-t border-purple-900/20 bg-[#13131a] px-4 py-3">
         <button
           type="submit"
           disabled={loading || code.trim().length === 0}
-          className="rounded-md bg-white px-5 py-2.5 text-sm font-semibold text-gray-950 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-400"
+          className="w-full rounded-lg bg-gradient-to-r from-purple-700 to-purple-900 py-3 text-base font-bold text-white transition-all hover:from-purple-600 hover:to-purple-800 disabled:cursor-not-allowed disabled:opacity-80"
         >
           {loading ? "Analyzing..." : "Analyze Code"}
         </button>
