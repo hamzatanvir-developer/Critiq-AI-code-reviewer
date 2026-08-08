@@ -37,7 +37,7 @@ export default function ReviewCard({ result, onSave, isSaving }) {
     return (
       <div
         key={index}
-        className={`flex items-start gap-3 rounded-lg bg-[#13131a] p-3 mb-2 ${
+        className={`flex items-start gap-3 rounded-lg bg-[#13131a] p-4 mb-2 ${
           isPass ? "border-l-2 border-green-600" : "border-l-2 border-red-600"
         }`}
       >
@@ -45,8 +45,8 @@ export default function ReviewCard({ result, onSave, isSaving }) {
           {isPass ? "✓" : "✗"}
         </span>
         <div>
-          <div className="text-sm font-medium text-white">{item.rule}</div>
-          <div className="mt-0.5 text-xs text-zinc-500">{item.description}</div>
+          <div className="text-base font-semibold text-white">{item.rule}</div>
+          <div className="mt-1 text-sm text-zinc-400">{item.description}</div>
         </div>
       </div>
     );
@@ -126,7 +126,7 @@ export default function ReviewCard({ result, onSave, isSaving }) {
 
       <div className="mb-6 rounded-xl border border-zinc-800/60 bg-[#13131a] p-4">
         <div className="flex items-center justify-between gap-4">
-          <span className="text-sm font-medium text-zinc-300">Complexity</span>
+          <span className="text-base font-semibold text-white">Complexity</span>
           <span
             className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${complexityBadgeStyles[complexity.level] ?? complexityBadgeStyles.Simple}`}
           >
@@ -141,7 +141,7 @@ export default function ReviewCard({ result, onSave, isSaving }) {
         </div>
 
         {Array.isArray(complexity.reasons) && complexity.reasons.length > 0 ? (
-          <ul className="mt-3 space-y-1 text-sm text-zinc-500">
+          <ul className="mt-3 space-y-1 text-sm text-zinc-400">
             {complexity.reasons.map((reason, index) => (
               <li key={index} className="flex items-start gap-2">
                 <span className="mt-2 h-1 w-1 rounded-full bg-zinc-500" />
