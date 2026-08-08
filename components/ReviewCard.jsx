@@ -5,9 +5,9 @@ import { useState } from "react";
 const tabs = ["Bugs", "Security", "Performance", "Quality"];
 
 const severityStyles = {
-  high: "bg-red-500/15 text-red-400 ring-red-500/30",
-  medium: "bg-yellow-500/15 text-yellow-300 ring-yellow-500/30",
-  low: "bg-gray-500/15 text-gray-300 ring-gray-500/30",
+  high: "bg-red-900/40 text-red-400",
+  medium: "bg-yellow-900/40 text-yellow-400",
+  low: "bg-zinc-800 text-zinc-400",
 };
 
 export default function ReviewCard({ result, onSave, isSaving }) {
@@ -15,10 +15,10 @@ export default function ReviewCard({ result, onSave, isSaving }) {
 
   const scoreColor =
     result.overallScore < 50
-      ? "border-red-500 text-red-400"
+      ? "border-red-500 text-red-500"
       : result.overallScore < 75
-        ? "border-yellow-400 text-yellow-300"
-        : "border-green-500 text-green-400";
+        ? "border-yellow-500 text-yellow-500"
+        : "border-green-500 text-green-500";
 
   const activeItems = result[activeTab.toLowerCase()] ?? [];
 
@@ -31,18 +31,18 @@ export default function ReviewCard({ result, onSave, isSaving }) {
       const severity = item.severity?.toLowerCase();
 
       return (
-        <article key={index} className="rounded-lg border border-gray-800 p-4">
+        <article key={index} className="mb-3 rounded-lg border-l-4 border-purple-600 bg-[#13131a] p-4">
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <span
-              className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1 ring-inset ${severityStyles[severity] ?? severityStyles.low}`}
+              className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${severityStyles[severity] ?? severityStyles.low}`}
             >
               {item.severity}
             </span>
-            <span className="font-mono text-sm text-gray-400">
+            <span className="font-mono text-sm text-zinc-400">
               Line {item.line}
             </span>
           </div>
-          <p className="text-gray-200">{item.issue}</p>
+          <p className="mb-1 font-medium text-white">{item.issue}</p>
         </article>
       );
     }
@@ -62,10 +62,10 @@ export default function ReviewCard({ result, onSave, isSaving }) {
           : "Improvement";
 
     return (
-      <article key={index} className="rounded-lg border border-gray-800 p-4">
-        <p className="text-gray-200">{item.issue}</p>
-        <p className="mt-3 text-sm leading-6 text-gray-400">
-          <span className="font-medium text-gray-300">{detailLabel}:</span>{" "}
+      <article key={index} className="mb-3 rounded-lg border-l-4 border-purple-600 bg-[#13131a] p-4">
+        <p className="mb-1 font-medium text-white">{item.issue}</p>
+        <p className="text-sm leading-6 text-zinc-400">
+          <span className="font-medium text-zinc-300">{detailLabel}:</span>{" "}
           {detail}
         </p>
       </article>
@@ -73,19 +73,21 @@ export default function ReviewCard({ result, onSave, isSaving }) {
   }
 
   return (
-    <section className="w-full rounded-xl border border-gray-800 bg-gray-950 p-6 text-white">
+    <section className="mx-auto w-full max-w-4xl rounded-2xl border border-purple-900/30 bg-[#1a1a2e] p-8 text-white shadow-[0_0_40px_rgba(124,58,237,0.1)] animate-fade-in">
       <div className="flex flex-col items-center text-center">
         <div
-          className={`flex size-36 flex-col items-center justify-center rounded-full border-4 ${scoreColor}`}
+          className={`mx-auto mb-6 flex h-32 w-32 flex-col items-center justify-center rounded-full border-4 glow-pulse ${scoreColor}`}
         >
-          <span className="text-5xl font-bold">{result.overallScore}</span>
-          <span className="mt-1 text-sm font-medium">/ 100</span>
+          <span className="text-4xl font-bold">{result.overallScore}</span>
+          <span className="text-sm text-zinc-500">/100</span>
         </div>
-        <p className="mt-6 max-w-3xl leading-7 text-gray-300">{result.summary}</p>
+        <p className="mx-auto mb-8 max-w-2xl italic leading-relaxed text-zinc-400">
+          {result.summary}
+        </p>
       </div>
 
-      <div className="mt-8 border-b border-gray-800">
-        <div className="flex gap-1 overflow-x-auto" role="tablist">
+      <div className="mb-6 border-b border-purple-900/20">
+        <div className="flex gap-6 overflow-x-auto" role="tablist">
           {tabs.map((tab) => (
             <button
               key={tab}
@@ -93,10 +95,10 @@ export default function ReviewCard({ result, onSave, isSaving }) {
               role="tab"
               aria-selected={activeTab === tab}
               onClick={() => setActiveTab(tab)}
-              className={`border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+              className={`pb-3 text-sm font-medium transition-colors ${
                 activeTab === tab
-                  ? "border-white text-white"
-                  : "border-transparent text-gray-500 hover:text-gray-300"
+                  ? "border-b-2 border-purple-500 text-purple-400"
+                  : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
               {tab}
@@ -105,21 +107,21 @@ export default function ReviewCard({ result, onSave, isSaving }) {
         </div>
       </div>
 
-      <div className="mt-6 space-y-3" role="tabpanel">
+      <div className="space-y-3" role="tabpanel">
         {activeItems.length > 0 ? (
           activeItems.map(renderItem)
         ) : (
-          <p className="rounded-lg border border-gray-800 py-10 text-center text-gray-500">
+          <p className="rounded-lg border border-purple-900/20 bg-[#13131a] py-10 text-center text-zinc-500">
             No issues found
           </p>
         )}
       </div>
 
-      <div className="mt-8 flex flex-wrap justify-end gap-3 border-t border-gray-800 pt-6">
+      <div className="mt-8 flex flex-wrap justify-end gap-3 border-t border-purple-900/20 pt-6">
         <button
           type="button"
           onClick={copyReport}
-          className="rounded-md bg-gray-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gray-600"
+          className="rounded-lg border border-zinc-700 bg-[#13131a] px-6 py-2 text-zinc-400 transition-colors hover:text-white"
         >
           Copy Report
         </button>
@@ -127,7 +129,7 @@ export default function ReviewCard({ result, onSave, isSaving }) {
           type="button"
           onClick={onSave}
           disabled={isSaving}
-          className="rounded-md bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-green-900 disabled:text-green-300"
+          className="rounded-lg bg-purple-700 px-6 py-2 text-white transition-colors hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-80"
         >
           {isSaving ? "Saving..." : "Save Review"}
         </button>
