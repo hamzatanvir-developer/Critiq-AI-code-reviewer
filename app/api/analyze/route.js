@@ -35,8 +35,11 @@ function buildPrompt(code, language) {
   "security": [{ "issue": "string", "recommendation": "string" }],
   "performance": [{ "issue": "string", "suggestion": "string" }],
   "quality": [{ "issue": "string", "improvement": "string" }],
+  "refactoredCode": "the improved version of the entire code with all fixes applied",
   "summary": "2-3 sentence summary of the code"
 }
+
+Also provide a refactoredCode field containing the complete rewritten version of the code with all bugs fixed, security issues resolved, and best practices applied. Keep the same language and functionality but improve the code quality.
 
 If the code provided does not match the specified language, do not analyze it.
 Instead return this exact JSON:
@@ -46,6 +49,7 @@ Instead return this exact JSON:
   "security": [],
   "performance": [],
   "quality": [],
+  "refactoredCode": "",
   "summary": "The code does not match the selected language. Please paste valid ${language} code and select the correct language."
 }
 

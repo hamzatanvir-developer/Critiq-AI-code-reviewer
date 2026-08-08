@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const tabs = ["Bugs", "Security", "Performance", "Quality"];
+const tabs = ["Bugs", "Security", "Performance", "Quality", "Refactored"];
 
 const severityStyles = {
   high: "bg-red-900/40 text-red-400",
@@ -24,6 +24,10 @@ export default function ReviewCard({ result, onSave, isSaving }) {
 
   function copyReport() {
     return navigator.clipboard.writeText(JSON.stringify(result, null, 2));
+  }
+
+  function copyCode() {
+    return navigator.clipboard.writeText(result.refactoredCode ?? "");
   }
 
   function renderItem(item, index) {
@@ -108,7 +112,37 @@ export default function ReviewCard({ result, onSave, isSaving }) {
       </div>
 
       <div className="space-y-3" role="tabpanel">
-        {activeItems.length > 0 ? (
+        {activeTab === "Refactored" ? (
+          <div className="rounded-lg border border-purple-900/20 bg-[#13131a] p-5">
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-white">Improved Code</h3>
+                  <span className="rounded-full border border-purple-900/30 bg-purple-900/20 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-purple-300">
+                    AI Rewritten
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={copyCode}
+                className="rounded-lg border border-zinc-700 bg-[#0d0d0f] px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-purple-900/40 hover:text-white"
+              >
+                Copy Code
+              </button>
+            </div>
+
+            {result.refactoredCode && result.refactoredCode.trim().length > 0 ? (
+              <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl bg-[#0d0d0f] p-6 font-mono text-sm text-green-400">
+                <code>{result.refactoredCode}</code>
+              </pre>
+            ) : (
+              <p className="py-10 text-center text-zinc-500">
+                No refactored code available
+              </p>
+            )}
+          </div>
+        ) : activeItems.length > 0 ? (
           activeItems.map(renderItem)
         ) : (
           <p className="rounded-lg border border-purple-900/20 bg-[#13131a] py-10 text-center text-zinc-500">
