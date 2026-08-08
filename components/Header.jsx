@@ -17,21 +17,31 @@ export default function Header() {
 
   return (
     <header className="border-b border-purple-900/30 bg-[#0d0d0f] text-white">
-      <nav className="flex w-full items-center justify-between px-6 py-4">
+      <nav
+        className="flex w-full items-center justify-between px-6 py-4"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(124,58,237,0.05), transparent)",
+        }}
+      >
         <Link
           href="/"
-          className="font-space text-xl font-bold tracking-tight bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent"
+          className="flex items-center font-space text-xl font-bold tracking-tight bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent"
         >
+          <span className="mr-2 h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
           Critiq
         </Link>
 
         <div className="flex items-center gap-6 text-sm text-zinc-400">
-          <Link href="/" className="transition-colors hover:text-purple-400">
+          <Link
+            href="/"
+            className="relative transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-purple-500 after:transition-all hover:text-purple-400 hover:after:w-full"
+          >
             Home
           </Link>
           <Link
             href="/history"
-            className="transition-colors hover:text-purple-400"
+            className="relative transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-purple-500 after:transition-all hover:text-purple-400 hover:after:w-full"
           >
             History
           </Link>
@@ -40,7 +50,9 @@ export default function Header() {
         <div className="flex items-center gap-4 text-sm">
           {user ? (
             <>
-              <span className="truncate text-sm text-zinc-500">{user.email}</span>
+              <span className="max-w-[150px] truncate text-sm text-zinc-500">
+                {user.email}
+              </span>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -58,6 +70,8 @@ export default function Header() {
             </Link>
           )}
         </div>
+
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
       </nav>
     </header>
   );
