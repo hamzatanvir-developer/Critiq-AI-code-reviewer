@@ -1,11 +1,11 @@
 "use client";
 
 const languageStyles = {
-  javascript: "bg-yellow-500/15 text-yellow-300 ring-yellow-500/30",
-  python: "bg-blue-500/15 text-blue-300 ring-blue-500/30",
-  java: "bg-orange-500/15 text-orange-300 ring-orange-500/30",
-  "c++": "bg-purple-500/15 text-purple-300 ring-purple-500/30",
-  react: "bg-cyan-500/15 text-cyan-300 ring-cyan-500/30",
+  javascript: "bg-yellow-400/10 text-yellow-400 border border-yellow-400/20",
+  python: "bg-blue-400/10 text-blue-400 border border-blue-400/20",
+  java: "bg-orange-400/10 text-orange-400 border border-orange-400/20",
+  "c++": "bg-cyan-400/10 text-cyan-400 border border-cyan-400/20",
+  react: "bg-sky-400/10 text-sky-400 border border-sky-400/20",
 };
 
 export default function HistoryCard({ review, onDelete, onView }) {
@@ -16,9 +16,6 @@ export default function HistoryCard({ review, onDelete, onView }) {
       : score < 75
         ? "text-yellow-300"
         : "text-green-400";
-  const languageColor =
-    languageStyles[review.language?.toLowerCase()] ??
-    "bg-gray-500/15 text-gray-300 ring-gray-500/30";
   const date = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "short",
@@ -27,39 +24,39 @@ export default function HistoryCard({ review, onDelete, onView }) {
   }).format(new Date(review.savedAt));
 
   return (
-    <article className="animate-fade-in rounded-xl border border-purple-900/30 bg-[#1a1a2e] p-5 text-white transition-all hover:shadow-[0_0_20px_rgba(124,58,237,0.15)]">
-      <div className="mb-3 flex items-center justify-between gap-4">
+    <article className="animate-fade-in cursor-pointer rounded-xl border border-zinc-800 bg-[#0d0d0f] p-5 text-white transition-all hover:border-purple-900/50">
+      <div className="mb-4 flex items-start justify-between gap-4">
         <span
-          className={`rounded-full px-3 py-1 text-xs font-medium ${languageColor}`}
+          className={`px-3 py-1 rounded-md uppercase tracking-wide text-xs font-bold ${languageStyles[review.language?.toLowerCase()] ?? languageStyles.react}`}
         >
           {review.language}
         </span>
-        <time dateTime={review.savedAt} className="text-xs text-zinc-500">
+        <time dateTime={review.savedAt} className="text-sm text-zinc-400 font-medium">
           {date}
         </time>
       </div>
 
-      <div className={`mb-1 text-3xl font-bold ${scoreColor}`}>
-        {score}
-        <span className="ml-1 text-sm text-zinc-500">/100</span>
+      <div className="mb-3 flex items-baseline gap-1">
+        <span className={`text-5xl font-black ${scoreColor}`}>{score}</span>
+        <span className="text-sm font-normal text-zinc-600">/100</span>
       </div>
 
-      <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+      <p className="mb-5 text-sm leading-relaxed text-zinc-500">
         {review.result?.summary}
       </p>
 
-      <div className="mt-4 flex gap-2 border-t border-purple-900/20 pt-4">
+      <div className="mt-4 flex items-center justify-between border-t border-zinc-800/50 pt-4">
         <button
           type="button"
           onClick={() => onView(review)}
-          className="flex-1 rounded-lg bg-purple-700 px-4 py-2 text-sm text-white transition-colors hover:bg-purple-600"
+          className="text-sm font-medium text-purple-400 transition-colors hover:text-purple-300"
         >
-          View Report
+          View Report →
         </button>
         <button
           type="button"
           onClick={() => onDelete(review.id)}
-          className="rounded-lg border border-red-900/50 px-4 py-2 text-sm text-red-400 transition-colors hover:bg-red-900/20"
+          className="bg-red-900/20 border border-red-900/40 text-red-400 hover:bg-red-900/40 text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
         >
           Delete
         </button>
