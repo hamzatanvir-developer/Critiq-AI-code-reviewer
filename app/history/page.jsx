@@ -75,34 +75,36 @@ export default function HistoryPage() {
 
   if (authLoading || !user) {
     return (
-      <main className="flex flex-1 items-center justify-center bg-gray-950 text-gray-400">
+      <main className="flex min-h-screen items-center justify-center bg-[#0d0d0f] text-zinc-400">
         Checking authentication...
       </main>
     );
   }
 
   return (
-    <main className="flex-1 bg-gray-950 px-4 py-12 text-white sm:px-6">
+    <main className="min-h-screen bg-[#0d0d0f] px-6 py-8 text-white">
       <div className="mx-auto w-full max-w-7xl">
-        <h1 className="text-4xl font-bold tracking-tight">Review History</h1>
+        <h1 className="mb-8 text-3xl font-bold font-space text-white">
+          Review History
+        </h1>
 
         {loading ? (
-          <p className="py-20 text-center text-gray-400">Loading reviews...</p>
+          <p className="py-20 text-center text-zinc-400">Loading reviews...</p>
         ) : reviews.length === 0 ? (
-          <section className="mt-10 rounded-xl border border-gray-800 bg-gray-900 px-6 py-16 text-center">
-            <p className="text-lg text-gray-300">
+          <section className="py-20 text-center">
+            <p className="mb-4 text-zinc-400">
               No reviews yet. Go analyze some code.
             </p>
             <button
               type="button"
               onClick={() => router.push("/")}
-              className="mt-6 rounded-md bg-white px-5 py-2.5 text-sm font-semibold text-gray-950 transition-colors hover:bg-gray-200"
+              className="rounded-lg bg-purple-700 px-6 py-2 text-white transition-colors hover:bg-purple-600"
             >
               Analyze Code
             </button>
           </section>
         ) : (
-          <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {reviews.map((review) => (
               <HistoryCard
                 key={review.id}

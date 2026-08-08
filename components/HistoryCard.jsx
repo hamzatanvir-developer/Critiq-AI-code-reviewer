@@ -27,39 +27,39 @@ export default function HistoryCard({ review, onDelete, onView }) {
   }).format(new Date(review.savedAt));
 
   return (
-    <article className="rounded-xl border border-gray-800 bg-gray-900 p-5 text-white transition-colors hover:border-gray-700 hover:bg-gray-900/80">
-      <div className="flex items-center justify-between gap-4">
+    <article className="animate-fade-in rounded-xl border border-purple-900/30 bg-[#1a1a2e] p-5 text-white transition-all hover:shadow-[0_0_20px_rgba(124,58,237,0.15)]">
+      <div className="mb-3 flex items-center justify-between gap-4">
         <span
-          className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${languageColor}`}
+          className={`rounded-full px-3 py-1 text-xs font-medium ${languageColor}`}
         >
           {review.language}
         </span>
-        <time dateTime={review.savedAt} className="text-sm text-gray-500">
+        <time dateTime={review.savedAt} className="text-xs text-zinc-500">
           {date}
         </time>
       </div>
 
-      <div className={`mt-5 text-3xl font-bold ${scoreColor}`}>
+      <div className={`mb-1 text-3xl font-bold ${scoreColor}`}>
         {score}
-        <span className="ml-1 text-sm font-medium text-gray-500">/ 100</span>
+        <span className="ml-1 text-sm text-zinc-500">/100</span>
       </div>
 
-      <p className="mt-3 line-clamp-2 min-h-12 text-sm leading-6 text-gray-400">
+      <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-zinc-400">
         {review.result?.summary}
       </p>
 
-      <div className="mt-5 flex items-center justify-end gap-3 border-t border-gray-800 pt-4">
+      <div className="mt-4 flex gap-2 border-t border-purple-900/20 pt-4">
         <button
           type="button"
           onClick={() => onView(review)}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
+          className="flex-1 rounded-lg bg-purple-700 px-4 py-2 text-sm text-white transition-colors hover:bg-purple-600"
         >
           View Report
         </button>
         <button
           type="button"
           onClick={() => onDelete(review.id)}
-          className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-500"
+          className="rounded-lg border border-red-900/50 px-4 py-2 text-sm text-red-400 transition-colors hover:bg-red-900/20"
         >
           Delete
         </button>
