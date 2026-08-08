@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 
 import CodeEditor from "@/components/CodeEditor";
 import ReviewCard from "@/components/ReviewCard";
@@ -75,19 +75,6 @@ export default function HomePage() {
   if (!user) {
     return (
       <main className="flex min-h-screen flex-col bg-[#0d0d0f] text-white">
-        <nav className="flex w-full items-center justify-between px-6 py-4">
-          <div className="font-space text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-            Critiq
-          </div>
-          <button
-            type="button"
-            onClick={() => router.push("/auth")}
-            className="rounded-lg border border-purple-700 px-5 py-2 text-sm text-purple-400 transition-all hover:bg-purple-700 hover:text-white"
-          >
-            Sign In
-          </button>
-        </nav>
-
         <section className="flex flex-1 flex-col items-center justify-center px-4 text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-900/40 bg-purple-900/20 px-4 py-1">
             <span className="h-2 w-2 rounded-full bg-purple-500" />
@@ -105,8 +92,8 @@ export default function HomePage() {
             and quality. Powered by Google Gemini AI.
           </p>
 
-          <div className="mb-10 w-full overflow-hidden border-y border-purple-900/20 py-3">
-            <div className="ticker-track flex gap-12 whitespace-nowrap">
+          <div className="my-8 w-full overflow-hidden border-y border-purple-900/20 py-3">
+            <div className="ticker-track flex gap-16 whitespace-nowrap">
               <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
                 <span className="h-2 w-2 rounded-full bg-yellow-400" />JavaScript
               </div>
@@ -144,16 +131,9 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => router.push("/auth")}
-              className="rounded-lg bg-purple-700 px-8 py-3 font-semibold text-white transition-all hover:bg-purple-600"
+              className="rounded-lg bg-purple-700 px-10 py-4 text-lg font-semibold text-white transition-all hover:bg-purple-600"
             >
-              Start Reviewing
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("/auth")}
-              className="rounded-lg border border-purple-700 px-8 py-3 text-purple-400 transition-all hover:bg-purple-700 hover:text-white"
-            >
-              Sign In
+              Get Started Free
             </button>
           </div>
         </section>
