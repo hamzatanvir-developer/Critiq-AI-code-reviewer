@@ -1,1 +1,59 @@
 @import "tailwindcss";
+
+:root {
+	--bg-primary: #0d0d0f;
+	--bg-secondary: #13131a;
+	--bg-card: #1a1a2e;
+	--purple-main: #7c3aed;
+	--purple-light: #a855f7;
+	--purple-glow: rgba(124, 58, 237, 0.15);
+	--text-primary: #ffffff;
+	--text-secondary: #a1a1aa;
+	--border-color: rgba(124, 58, 237, 0.2);
+	--border-hover: rgba(124, 58, 237, 0.5);
+}
+
+@keyframes ticker {
+	0% {
+		transform: translateX(0);
+	}
+
+	100% {
+		transform: translateX(-50%);
+	}
+}
+
+.ticker-track {
+	animation: ticker 20s linear infinite;
+}
+
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.animate-fade-in {
+	animation: fadeInUp 0.4s ease forwards;
+}
+
+@keyframes glow {
+	0%,
+	100% {
+		box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+	}
+
+	50% {
+		box-shadow: 0 0 40px rgba(124, 58, 237, 0.6);
+	}
+}
+
+.glow-pulse {
+	animation: glow 2s ease-in-out infinite;
+}
