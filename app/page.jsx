@@ -128,7 +128,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-gray-950 px-4 py-12 text-white sm:px-6">
-      <div className="mx-auto w-full max-w-5xl">
+      <div className="mx-auto w-full max-w-5xl pt-28 pb-12">
         {result ? (
           <div className="space-y-8">
             <CodeEditor onAnalyze={handleAnalyze} loading={loading} />

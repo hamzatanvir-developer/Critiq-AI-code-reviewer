@@ -44,7 +44,7 @@ export default function HistoryCard({ review, onDelete, onView }) {
         <span className="ml-1 text-sm text-zinc-500">/100</span>
       </div>
 
-      <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-zinc-400">
+      <p className="text-zinc-400 text-sm leading-relaxed mb-4">
         {review.result?.summary}
       </p>
 

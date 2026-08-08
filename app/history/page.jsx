@@ -84,7 +84,7 @@ export default function HistoryPage() {
   return (
     <main className="min-h-screen bg-[#0d0d0f] px-6 py-8 text-white">
       <div className="mx-auto w-full max-w-7xl">
-        <h1 className="mb-8 text-3xl font-bold font-space text-white">
+        <h1 className="mb-8 pt-8 text-3xl font-bold font-space text-white">
           Review History
         </h1>
 
