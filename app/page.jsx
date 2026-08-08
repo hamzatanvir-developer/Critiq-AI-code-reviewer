@@ -76,11 +76,6 @@ export default function HomePage() {
     return (
       <main className="flex min-h-screen flex-col bg-[#0d0d0f] text-white">
         <section className="flex flex-1 flex-col items-center justify-center px-4 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-900/40 bg-purple-900/20 px-4 py-1">
-            <span className="h-2 w-2 rounded-full bg-purple-500" />
-            <span className="text-sm text-purple-400">AI-Powered Code Review</span>
-          </div>
-
           <h1 className="mb-4 text-5xl font-bold leading-tight text-white md:text-7xl font-space">
             AI-powered code review
             <br />
@@ -92,10 +87,14 @@ export default function HomePage() {
             and quality. Powered by Google Gemini AI.
           </p>
 
-          <div className="relative my-8 w-full max-w-2xl mx-auto overflow-hidden py-3 border-y border-purple-900/20">
+          <div className="relative w-full overflow-hidden my-8 py-2">
+            <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#0d0d0f] to-transparent z-10" />
+            <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#0d0d0f] to-transparent z-10" />
             <div className="flex gap-16 ticker-track">
-              {['JavaScript', 'Python', 'Java', 'C++', 'React', 'JavaScript', 'Python', 'Java', 'C++', 'React'].map((lang, i) => (
-                <span key={i} className="flex items-center gap-2 text-zinc-400 text-sm font-medium whitespace-nowrap">
+              {['JavaScript', 'Python', 'Java', 'C++', 'React',
+                'JavaScript', 'Python', 'Java', 'C++', 'React',
+                'JavaScript', 'Python', 'Java', 'C++', 'React'].map((lang, i) => (
+                <span key={i} className="flex items-center gap-2 text-zinc-400 text-sm font-medium whitespace-nowrap shrink-0">
                   <span className={`w-2 h-2 rounded-full ${
                     lang === 'JavaScript' ? 'bg-yellow-400' :
                     lang === 'Python' ? 'bg-blue-400' :
