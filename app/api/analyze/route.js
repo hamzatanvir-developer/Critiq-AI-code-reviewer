@@ -19,9 +19,56 @@ const rateLimitMock = {
       improvement: "Try again in a moment",
     },
   ],
+  complexity: {
+    level: "Unavailable",
+    score: 0,
+    reasons: ["Complexity could not be calculated while the API limit is active."],
+  },
   summary:
     "API rate limit reached. This is a mock response for testing. Please try again in a few seconds.",
 };
+
+function estimateComplexity(code) {
+  const lines = code.split("\n").filter((line) => line.trim()).length;
+  const decisions =
+    code.match(/\b(if|else if|for|while|switch|case|catch)\b|&&|\|\||\?/g)
+      ?.length ?? 0;
+  const score = Math.max(1, Math.min(10, 1 + Math.floor(lines / 35) + Math.floor(decisions / 3)));
+  const level = score <= 3 ? "Simple" : score <= 6 ? "Moderate" : "Complex";
+
+  return {
+    level,
+    score,
+    reasons: [
+      `${lines} non-empty line${lines === 1 ? "" : "s"} of code were analyzed.`,
+      `${decisions} branching or decision point${decisions === 1 ? "" : "s"} were detected.`,
+      "This fallback estimate is based on code size and control-flow structure.",
+    ],
+  };
+}
+
+function normalizeResult(result, code) {
+  const suppliedScore = Number(result?.complexity?.score);
+  const hasValidComplexity =
+    result?.complexity &&
+    typeof result.complexity.level === "string" &&
+    Number.isFinite(suppliedScore) &&
+    suppliedScore >= 1 &&
+    suppliedScore <= 10;
+
+  return {
+    ...result,
+    complexity: hasValidComplexity
+      ? {
+          ...result.complexity,
+          score: suppliedScore,
+          reasons: Array.isArray(result.complexity.reasons)
+            ? result.complexity.reasons
+            : [],
+        }
+      : estimateComplexity(code),
+  };
+}
 
 function wait(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -168,7 +215,7 @@ export async function POST(request) {
           break;
         }
 
-        return Response.json(JSON.parse(text));
+        return Response.json(normalizeResult(JSON.parse(text), code));
       } catch (error) {
         console.error(`Gemini ${model} request failed:`, error);
         break;

@@ -10,7 +10,34 @@ const severityStyles = {
   low: "bg-zinc-800 text-zinc-400",
 };
 
-export default function ReviewCard({ result, onSave, isSaving, saveStatus = "idle" }) {
+function estimateComplexity(code = "") {
+  const lines = code.split("\n").filter((line) => line.trim()).length;
+  const decisions =
+    code.match(/\b(if|else if|for|while|switch|case|catch)\b|&&|\|\||\?/g)
+      ?.length ?? 0;
+  const score = Math.max(
+    1,
+    Math.min(10, 1 + Math.floor(lines / 35) + Math.floor(decisions / 3)),
+  );
+
+  return {
+    level: score <= 3 ? "Simple" : score <= 6 ? "Moderate" : "Complex",
+    score,
+    reasons: [
+      `${lines} non-empty line${lines === 1 ? "" : "s"} of code were analyzed.`,
+      `${decisions} branching or decision point${decisions === 1 ? "" : "s"} were detected.`,
+      "The score is based on code size and control-flow structure.",
+    ],
+  };
+}
+
+export default function ReviewCard({
+  result,
+  onSave,
+  isSaving,
+  saveStatus = "idle",
+  sourceCode = "",
+}) {
   const [activeTab, setActiveTab] = useState("Bugs");
   const [copied, setCopied] = useState(false);
 
@@ -23,6 +50,7 @@ export default function ReviewCard({ result, onSave, isSaving, saveStatus = "idl
 
   const activeItems = result[activeTab.toLowerCase()] ?? [];
   const bestPractices = result.bestPractices ?? [];
+  const complexity = result.complexity ?? estimateComplexity(sourceCode);
 
   function formatList(items, formatItem) {
     if (!Array.isArray(items) || items.length === 0) {
@@ -176,7 +204,7 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
               Code Complexity
             </p>
             <h3 className="text-3xl font-black text-[#f5f5f5]">
-              {result.complexity?.level}
+              {complexity.level}
             </h3>
           </div>
           <div
@@ -186,14 +214,14 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
               className="text-5xl font-black"
               style={{
                 color:
-                  result.complexity?.level === "Simple"
+                  complexity.level === "Simple"
                     ? "#4ade80"
-                    : result.complexity?.level === "Moderate"
+                    : complexity.level === "Moderate"
                       ? "#facc15"
                       : "#f87171",
               }}
             >
-              {result.complexity?.score}
+              {complexity.score}
             </span>
             <span className="text-xs text-[#606060]">out of 10</span>
           </div>
@@ -207,15 +235,15 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
               className="h-2 flex-1 rounded-full transition-all duration-500"
               style={{
                 backgroundColor:
-                  i < result.complexity?.score
-                    ? result.complexity?.level === "Simple"
+                  i < complexity.score
+                    ? complexity.level === "Simple"
                       ? "#4ade80"
-                      : result.complexity?.level === "Moderate"
+                      : complexity.level === "Moderate"
                         ? "#facc15"
                         : "#f87171"
                     : "#2a2a2a",
                 animationDelay: `${i * 0.1}s`,
-                opacity: i < result.complexity?.score ? 1 : 0.3,
+                opacity: i < complexity.score ? 1 : 0.3,
               }}
             />
           ))}
@@ -223,7 +251,7 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
 
         {/* Reasons */}
         <div className="space-y-2 relative z-10">
-          {result.complexity?.reasons?.map((reason, i) => (
+          {complexity.reasons.map((reason, i) => (
             <div key={i} className="flex items-start gap-3">
               <span className="text-[#606060] font-mono text-xs mt-0.5">
                 0{i + 1}
