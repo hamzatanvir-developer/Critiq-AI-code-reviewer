@@ -76,8 +76,9 @@ export default function CodeEditor({ onAnalyze, loading }) {
                 (letter, i) => (
                   <span
                     key={i}
-                    className="text-green-400 font-mono font-bold text-lg inline-block"
+                    className="font-mono font-bold text-lg inline-block"
                     style={{
+                      color: "#f59e0b",
                       animation: "wave 0.8s ease-in-out infinite",
                       animationDelay: `${i * 0.1}s`,
                     }}
@@ -86,7 +87,10 @@ export default function CodeEditor({ onAnalyze, loading }) {
                   </span>
                 ),
               )}
-              <span className="text-green-400 font-mono font-bold text-lg ml-1 animate-pulse">
+              <span
+                className="font-mono font-bold text-lg ml-1 animate-pulse"
+                style={{ color: "#f59e0b" }}
+              >
                 ...
               </span>
             </div>
@@ -95,8 +99,9 @@ export default function CodeEditor({ onAnalyze, loading }) {
               {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
                 <div
                   key={i}
-                  className="w-1.5 h-6 bg-green-400 rounded-full"
+                  className="w-1.5 h-6 rounded-full"
                   style={{
+                    backgroundColor: "#f59e0b",
                     animation: "equalizer 1s ease-in-out infinite",
                     animationDelay: `${i * 0.12}s`,
                   }}
@@ -104,7 +109,10 @@ export default function CodeEditor({ onAnalyze, loading }) {
               ))}
             </div>
 
-            <p className="text-[#606060] text-xs font-mono animate-pulse">
+            <p
+              className="text-xs font-mono animate-pulse"
+              style={{ color: "#fbbf24" }}
+            >
               Scanning your code for issues...
             </p>
           </div>

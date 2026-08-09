@@ -12,6 +12,7 @@ const severityStyles = {
 
 export default function ReviewCard({ result, onSave, isSaving }) {
   const [activeTab, setActiveTab] = useState("Bugs");
+  const [copied, setCopied] = useState(false);
 
   const scoreColor =
     result.overallScore < 50
@@ -23,8 +24,57 @@ export default function ReviewCard({ result, onSave, isSaving }) {
   const activeItems = result[activeTab.toLowerCase()] ?? [];
   const bestPractices = result.bestPractices ?? [];
 
-  function copyReport() {
-    return navigator.clipboard.writeText(JSON.stringify(result, null, 2));
+  function formatList(items, formatItem) {
+    if (!Array.isArray(items) || items.length === 0) {
+      return "No issues found.";
+    }
+
+    return items.map((item, index) => `${index + 1}. ${formatItem(item)}`).join("\n\n");
+  }
+
+  function formatReport() {
+    const complexity = result.complexity ?? {};
+
+    return `CRITIQ CODE REVIEW REPORT
+==========================
+
+OVERALL SCORE
+${result.overallScore ?? "N/A"}/100
+
+SUMMARY
+${result.summary ?? "No summary available."}
+
+COMPLEXITY
+Level: ${complexity.level ?? "N/A"}
+Score: ${complexity.score ?? "N/A"}
+Reasons:
+${Array.isArray(complexity.reasons) && complexity.reasons.length > 0 ? complexity.reasons.map((reason) => `- ${reason}`).join("\n") : "- No complexity notes provided."}
+
+BUGS
+${formatList(result.bugs, (item) => `Line: ${item.line ?? "N/A"}\nSeverity: ${item.severity ?? "N/A"}\nIssue: ${item.issue ?? "N/A"}`)}
+
+SECURITY
+${formatList(result.security, (item) => `Issue: ${item.issue ?? "N/A"}\nRecommendation: ${item.recommendation ?? "N/A"}`)}
+
+PERFORMANCE
+${formatList(result.performance, (item) => `Issue: ${item.issue ?? "N/A"}\nSuggestion: ${item.suggestion ?? "N/A"}`)}
+
+QUALITY
+${formatList(result.quality, (item) => `Issue: ${item.issue ?? "N/A"}\nImprovement: ${item.improvement ?? "N/A"}`)}
+
+BEST PRACTICES
+${formatList(result.bestPractices, (item) => `[${item.status?.toUpperCase() ?? "N/A"}] ${item.rule ?? "Unnamed rule"}\n${item.description ?? "No description."}`)}
+
+REFACTORED CODE
+---------------
+${result.refactoredCode?.trim() || "No refactored code available."}
+`;
+  }
+
+  async function copyReport() {
+    await navigator.clipboard.writeText(formatReport());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   function copyCode() {
@@ -51,18 +101,6 @@ export default function ReviewCard({ result, onSave, isSaving }) {
       </div>
     );
   }
-
-  const complexity = result.complexity ?? { level: "Simple", score: 1, reasons: [] };
-  const complexityBadgeStyles = {
-    Simple: "bg-green-900/20 text-green-400 border border-green-900/30",
-    Moderate: "bg-yellow-900/20 text-yellow-400 border border-yellow-900/30",
-    Complex: "bg-red-900/20 text-red-400 border border-red-900/30",
-  };
-  const complexityBarStyles = {
-    Simple: "w-[33%] bg-green-400",
-    Moderate: "w-[66%] bg-yellow-400",
-    Complex: "w-full bg-red-400",
-  };
 
   function renderItem(item, index) {
     if (activeTab === "Bugs") {
@@ -124,32 +162,78 @@ export default function ReviewCard({ result, onSave, isSaving }) {
         </p>
       </div>
 
-      <div className="mb-6 rounded-xl border border-[#2a2a2a] bg-[#161616] p-4">
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-base font-semibold text-white">Complexity</span>
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${complexityBadgeStyles[complexity.level] ?? complexityBadgeStyles.Simple}`}
-          >
-            {complexity.level}
-          </span>
-        </div>
-
-        <div className="mt-2 h-1.5 w-full rounded-full bg-zinc-800">
+      <div
+        className="mb-8 relative overflow-hidden rounded-2xl p-6"
+        style={{
+          background: "linear-gradient(135deg, #161616 0%, #1a1a1a 100%)",
+          border: "1px solid #2a2a2a",
+        }}
+      >
+        {/* Header row */}
+        <div className="flex items-start justify-between mb-6 relative z-10">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-[#606060] mb-1 font-medium">
+              Code Complexity
+            </p>
+            <h3 className="text-3xl font-black text-[#f5f5f5]">
+              {result.complexity?.level}
+            </h3>
+          </div>
           <div
-            className={`h-full rounded-full transition-all ${complexityBarStyles[complexity.level] ?? complexityBarStyles.Simple}`}
-          />
+            className="flex flex-col items-end"
+          >
+            <span
+              className="text-5xl font-black"
+              style={{
+                color:
+                  result.complexity?.level === "Simple"
+                    ? "#4ade80"
+                    : result.complexity?.level === "Moderate"
+                      ? "#facc15"
+                      : "#f87171",
+              }}
+            >
+              {result.complexity?.score}
+            </span>
+            <span className="text-xs text-[#606060]">out of 10</span>
+          </div>
         </div>
 
-        {Array.isArray(complexity.reasons) && complexity.reasons.length > 0 ? (
-          <ul className="mt-3 space-y-1 text-sm text-zinc-400">
-            {complexity.reasons.map((reason, index) => (
-              <li key={index} className="flex items-start gap-2">
-                <span className="mt-2 h-1 w-1 rounded-full bg-zinc-500" />
-                <span>{reason}</span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+        {/* Progress segments */}
+        <div className="flex gap-1 mb-6 relative z-10">
+          {[...Array(10)].map((_, i) => (
+            <div
+              key={i}
+              className="h-2 flex-1 rounded-full transition-all duration-500"
+              style={{
+                backgroundColor:
+                  i < result.complexity?.score
+                    ? result.complexity?.level === "Simple"
+                      ? "#4ade80"
+                      : result.complexity?.level === "Moderate"
+                        ? "#facc15"
+                        : "#f87171"
+                    : "#2a2a2a",
+                animationDelay: `${i * 0.1}s`,
+                opacity: i < result.complexity?.score ? 1 : 0.3,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Reasons */}
+        <div className="space-y-2 relative z-10">
+          {result.complexity?.reasons?.map((reason, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <span className="text-[#606060] font-mono text-xs mt-0.5">
+                0{i + 1}
+              </span>
+              <p className="text-[#a0a0a0] text-sm leading-relaxed">
+                {reason}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="mb-6 border-b border-[#2a2a2a]">
@@ -227,18 +311,21 @@ export default function ReviewCard({ result, onSave, isSaving }) {
         <button
           type="button"
           onClick={copyReport}
+          disabled={copied}
           className="rounded-lg border border-[#3a3a3a] bg-[#161616] px-6 py-2 text-zinc-400 transition-colors hover:text-white"
         >
-          Copy Report
+          {copied ? "Copied!" : "Copy Report"}
         </button>
-        <button
-          type="button"
-          onClick={onSave}
-          disabled={isSaving}
-          className="rounded-lg bg-[#f5f5f5] px-6 py-2 text-[#111111] transition-colors hover:bg-[#e0e0e0] disabled:cursor-not-allowed disabled:opacity-80"
-        >
-          {isSaving ? "Saving..." : "Save Review"}
-        </button>
+        {onSave && (
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={isSaving}
+            className="rounded-lg bg-[#f5f5f5] px-6 py-2 text-[#111111] transition-colors hover:bg-[#e0e0e0] disabled:cursor-not-allowed disabled:opacity-80"
+          >
+            {isSaving ? "Saving..." : "Save Review"}
+          </button>
+        )}
       </div>
     </section>
   );

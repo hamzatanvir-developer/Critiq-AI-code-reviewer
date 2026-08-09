@@ -176,7 +176,7 @@ export default function HistoryPage() {
             <div className="p-6">
               <ReviewCard
                 result={selectedReview.result}
-                onSave={() => {}}
+                onSave={null}
                 isSaving={false}
               />
             </div>
