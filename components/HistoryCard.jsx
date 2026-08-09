@@ -28,20 +28,20 @@ export default function HistoryCard({ review, onDelete, onView }) {
 
   return (
     <article
-      className="group cursor-pointer relative min-h-64"
+      className="group cursor-pointer relative h-72"
       style={{ perspective: "1000px", transformStyle: "preserve-3d" }}
       onMouseEnter={() => setFlipped(true)}
       onMouseLeave={() => setFlipped(false)}
     >
       {/* Front face */}
       <div
-        className="absolute inset-0 min-h-64 rounded-xl bg-[#1c1c1c] border border-[#2a2a2a] p-5 transition-transform duration-500 backface-hidden"
+        className="absolute inset-0 rounded-xl bg-[#1c1c1c] border border-[#2a2a2a] p-5 transition-transform duration-500 backface-hidden flex flex-col h-full"
         style={{
           backfaceVisibility: "hidden",
           transform: flipped ? "rotateY(-180deg)" : "rotateY(0deg)",
         }}
       >
-        <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="mb-4 flex items-start justify-between gap-4 shrink-0">
           <span
             className={`px-3 py-1 rounded-md uppercase tracking-wide text-xs font-bold ${languageStyles[review.language?.toLowerCase()] ?? languageStyles.react}`}
           >
@@ -55,38 +55,50 @@ export default function HistoryCard({ review, onDelete, onView }) {
           </time>
         </div>
 
-        <div className="mb-3 flex items-baseline gap-1">
+        <div className="mb-3 flex items-baseline gap-1 shrink-0">
           <span className={`text-5xl font-black ${scoreColor}`}>{score}</span>
           <span className="text-sm font-normal text-zinc-600">/100</span>
         </div>
 
-        <p className="text-sm leading-relaxed text-[#a0a0a0] overflow-hidden">
+        <p
+          className="flex-1 overflow-y-auto text-sm leading-relaxed text-[#a0a0a0]"
+          style={{
+            scrollbarWidth: "thin",
+            scrollbarColor: "#2a2a2a transparent",
+          }}
+        >
           {review.result?.summary}
         </p>
       </div>
 
       {/* Back face */}
       <div
-        className="absolute inset-0 min-h-64 rounded-xl bg-[#111111] border border-green-400/30 p-5 flex flex-col items-center transition-transform duration-500"
+        className="absolute inset-0 rounded-xl bg-[#111111] border border-green-400/30 p-5 flex flex-col h-full justify-between transition-transform duration-500"
         style={{
           backfaceVisibility: "hidden",
           transform: flipped ? "rotateY(0deg)" : "rotateY(180deg)",
         }}
       >
-        <div
-          className="text-7xl font-black mt-3 mb-4"
-          style={{
-            color:
-              score >= 75 ? "#4ade80" : score >= 50 ? "#facc15" : "#f87171",
-          }}
-        >
-          {score}
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div
+            className="text-7xl font-black mt-3 mb-4"
+            style={{
+              color:
+                score >= 75
+                  ? "#4ade80"
+                  : score >= 50
+                    ? "#facc15"
+                    : "#f87171",
+            }}
+          >
+            {score}
+          </div>
+          <p className="text-[#a0a0a0] text-xs text-center leading-relaxed line-clamp-3 overflow-hidden">
+            {review.result?.summary?.slice(0, 80)}
+          </p>
         </div>
-        <p className="text-[#a0a0a0] text-xs text-center leading-relaxed line-clamp-3 overflow-hidden">
-          {review.result?.summary?.slice(0, 80)}
-        </p>
 
-        <div className="mt-auto w-full flex items-center justify-between border-t border-[#2a2a2a] pt-4">
+        <div className="shrink-0 mt-auto w-full flex items-center justify-between border-t border-[#2a2a2a] pt-4">
           <button
             type="button"
             onClick={() => onView(review)}
