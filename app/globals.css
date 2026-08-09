@@ -3,9 +3,24 @@
 html,
 body {
 	background-color: #111111;
-	min-height: 100%;
+	height: auto;
+	min-height: 100dvh;
 	max-width: 100%;
-	overflow-x: hidden;
+}
+
+html {
+	overflow-x: clip;
+	overflow-y: auto;
+	scroll-behavior: auto;
+	overscroll-behavior-y: auto;
+}
+
+body {
+	overflow-x: visible;
+	overflow-y: visible;
+	touch-action: pan-y;
+	overscroll-behavior-y: auto;
+	padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
 }
 
 * {

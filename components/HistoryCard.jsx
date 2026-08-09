@@ -61,13 +61,7 @@ export default function HistoryCard({ review, onDelete, onView }) {
           <span className="text-sm font-normal text-zinc-600">/100</span>
         </div>
 
-        <p
-          className="flex-1 overflow-y-auto text-sm leading-relaxed text-[#a0a0a0]"
-          style={{
-            scrollbarWidth: "thin",
-            scrollbarColor: "#2a2a2a transparent",
-          }}
-        >
+        <p className="line-clamp-5 flex-1 overflow-hidden text-sm leading-relaxed text-[#a0a0a0]">
           {review.result?.summary}
         </p>
       </div>
