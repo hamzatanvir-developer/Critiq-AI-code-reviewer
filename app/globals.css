@@ -175,3 +175,71 @@ body {
 		opacity: 1;
 	}
 }
+
+@keyframes trashShake {
+	0%,
+	100% {
+		transform: translateX(-50%) rotate(-5deg) scale(1);
+	}
+
+	50% {
+		transform: translateX(-50%) rotate(5deg) scale(1.06);
+	}
+}
+
+@keyframes paperDrop {
+	0% {
+		transform: translateY(-10px) rotate(0deg) scale(1);
+		opacity: 0;
+	}
+
+	20% {
+		opacity: 1;
+	}
+
+	100% {
+		transform: translateY(64px) rotate(240deg) scale(0.35);
+		opacity: 0;
+	}
+}
+
+@keyframes deleteProgress {
+	0% {
+		transform: translateX(-100%);
+	}
+
+	50% {
+		transform: translateX(0%);
+	}
+
+	100% {
+		transform: translateX(100%);
+	}
+}
+
+@keyframes saveShimmer {
+	0% {
+		background-position: 0% 50%;
+	}
+
+	100% {
+		background-position: 200% 50%;
+	}
+}
+
+@keyframes saveSuccessPop {
+	0% {
+		transform: scale(0.45) rotate(-8deg);
+		opacity: 0;
+	}
+
+	70% {
+		transform: scale(1.12) rotate(2deg);
+		opacity: 1;
+	}
+
+	100% {
+		transform: scale(1) rotate(0deg);
+		opacity: 1;
+	}
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import CodeEditor from "@/components/CodeEditor";
 import ReviewCard from "@/components/ReviewCard";
@@ -15,15 +15,47 @@ export default function HomePage() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("idle");
+  const [reviewSaved, setReviewSaved] = useState(false);
   const [error, setError] = useState(null);
   const [analyzedCode, setAnalyzedCode] = useState("");
   const [analyzedLanguage, setAnalyzedLanguage] = useState("");
+
+  useEffect(() => {
+    if (authLoading || !user) {
+      return;
+    }
+
+    const storageKey = `critiq:last-review:${user.uid}`;
+
+    try {
+      const savedReview = window.localStorage.getItem(storageKey);
+
+      if (!savedReview) {
+        setResult(null);
+        setAnalyzedCode("");
+        setAnalyzedLanguage("");
+        setReviewSaved(false);
+        return;
+      }
+
+      const parsedReview = JSON.parse(savedReview);
+      setResult(parsedReview.result ?? null);
+      setAnalyzedCode(parsedReview.code ?? "");
+      setAnalyzedLanguage(parsedReview.language ?? "");
+      setReviewSaved(Boolean(parsedReview.saved));
+    } catch {
+      window.localStorage.removeItem(storageKey);
+    }
+  }, [authLoading, user]);
 
   async function handleAnalyze(code, language) {
     const loadingStartedAt = Date.now();
     setLoading(true);
     setError(null);
     setResult(null);
+    setSaveStatus("idle");
+    setReviewSaved(false);
 
     try {
       const analysis = await analyzeCode(code, language);
@@ -36,6 +68,18 @@ export default function HomePage() {
       setAnalyzedCode(code);
       setAnalyzedLanguage(language);
       setResult(analysis);
+
+      if (user) {
+        try {
+          window.localStorage.setItem(
+            `critiq:last-review:${user.uid}`,
+            JSON.stringify({ code, language, result: analysis, saved: false }),
+          );
+        } catch {
+          // The analysis remains usable even if browser storage is unavailable.
+        }
+      }
+
       setTimeout(() => {
         document
           .getElementById('review-section')
@@ -61,18 +105,53 @@ export default function HomePage() {
       return;
     }
 
+    if (reviewSaved) {
+      setSaveStatus("already");
+      setTimeout(() => setSaveStatus("idle"), 2200);
+      return;
+    }
+
+    const savingStartedAt = Date.now();
     setIsSaving(true);
+    setSaveStatus("saving");
     setError(null);
 
     try {
-      await saveReview(user.uid, {
+      const savedReview = await saveReview(user.uid, {
         code: analyzedCode,
         language: analyzedLanguage,
         result,
         savedAt: new Date().toISOString(),
       });
+
+      const remainingAnimationTime = 1600 - (Date.now() - savingStartedAt);
+      if (remainingAnimationTime > 0) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, remainingAnimationTime),
+        );
+      }
+
+      setReviewSaved(true);
+      setSaveStatus(savedReview.alreadySaved ? "already" : "saved");
+
+      try {
+        window.localStorage.setItem(
+          `critiq:last-review:${user.uid}`,
+          JSON.stringify({
+            code: analyzedCode,
+            language: analyzedLanguage,
+            result,
+            saved: true,
+          }),
+        );
+      } catch {
+        // Saving to Firestore is not affected by browser storage availability.
+      }
+
+      setTimeout(() => setSaveStatus("idle"), 2400);
     } catch {
       setError("Unable to save the review. Please try again.");
+      setSaveStatus("idle");
     } finally {
       setIsSaving(false);
     }
@@ -191,6 +270,7 @@ export default function HomePage() {
                   result={result}
                   onSave={handleSave}
                   isSaving={isSaving}
+                  saveStatus={saveStatus}
                 />
               </div>
             )}

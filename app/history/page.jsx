@@ -16,6 +16,7 @@ export default function HistoryPage() {
   const router = useRouter();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [selectedReview, setSelectedReview] = useState(null);
 
   useEffect(() => {
@@ -54,11 +55,11 @@ export default function HistoryPage() {
   }, [authLoading, router, user]);
 
   async function handleDelete(reviewId) {
-    if (!user) {
+    if (!user || deletingId) {
       return;
     }
 
-    setLoading(true);
+    setDeletingId(reviewId);
 
     try {
       await deleteReview(user.uid, reviewId);
@@ -69,7 +70,7 @@ export default function HistoryPage() {
         setSelectedReview(null);
       }
     } finally {
-      setLoading(false);
+      setDeletingId(null);
     }
   }
 
@@ -109,12 +110,85 @@ export default function HistoryPage() {
             style={{ perspective: "1000px" }}
           >
             {reviews.map((review) => (
-              <HistoryCard
-                key={review.id}
-                review={review}
-                onDelete={handleDelete}
-                onView={setSelectedReview}
-              />
+              <div key={review.id} className="relative h-full">
+                <HistoryCard
+                  review={review}
+                  onDelete={handleDelete}
+                  onView={setSelectedReview}
+                />
+
+                {deletingId === review.id && (
+                  <div className="absolute inset-0 z-40 flex flex-col items-center justify-center overflow-hidden rounded-xl border border-red-400/20 bg-[#0b0b0b]/95 backdrop-blur-md">
+                    <div className="relative mb-5 h-24 w-24">
+                      <span
+                        className="absolute left-5 top-0 h-3 w-3 rounded-sm bg-red-300"
+                        style={{ animation: "paperDrop 1s ease-in infinite" }}
+                      />
+                      <span
+                        className="absolute left-11 top-1 h-2.5 w-2.5 rounded-sm bg-orange-300"
+                        style={{
+                          animation: "paperDrop 1s ease-in 0.25s infinite",
+                        }}
+                      />
+                      <span
+                        className="absolute right-5 top-0 h-2 w-2 rounded-sm bg-yellow-200"
+                        style={{
+                          animation: "paperDrop 1s ease-in 0.5s infinite",
+                        }}
+                      />
+
+                      <svg
+                        viewBox="0 0 64 64"
+                        aria-hidden="true"
+                        className="absolute bottom-0 left-1/2 h-16 w-16 -translate-x-1/2 text-red-400 drop-shadow-[0_0_16px_rgba(248,113,113,0.45)]"
+                        style={{
+                          animation:
+                            "trashShake 0.55s ease-in-out infinite",
+                        }}
+                      >
+                        <path
+                          d="M20 20h24l-2 34H22L20 20Z"
+                          fill="currentColor"
+                          opacity="0.22"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M16 16h32M26 10h12"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M28 28v16M36 28v16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </div>
+
+                    <p className="font-mono text-sm font-bold tracking-[0.2em] text-red-300">
+                      DELETING REVIEW
+                    </p>
+                    <p className="mt-2 text-xs text-[#606060]">
+                      Sending it to the void...
+                    </p>
+
+                    <div className="mt-5 h-1 w-36 overflow-hidden rounded-full bg-[#2a2a2a]">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-red-500 via-orange-400 to-yellow-300"
+                        style={{
+                          animation: "deleteProgress 1.2s ease-in-out infinite",
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         )}

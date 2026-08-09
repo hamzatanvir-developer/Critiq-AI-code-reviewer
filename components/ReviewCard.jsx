@@ -10,7 +10,7 @@ const severityStyles = {
   low: "bg-zinc-800 text-zinc-400",
 };
 
-export default function ReviewCard({ result, onSave, isSaving }) {
+export default function ReviewCard({ result, onSave, isSaving, saveStatus = "idle" }) {
   const [activeTab, setActiveTab] = useState("Bugs");
   const [copied, setCopied] = useState(false);
 
@@ -320,10 +320,61 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
           <button
             type="button"
             onClick={onSave}
-            disabled={isSaving}
-            className="rounded-lg bg-[#f5f5f5] px-6 py-2 text-[#111111] transition-colors hover:bg-[#e0e0e0] disabled:cursor-not-allowed disabled:opacity-80"
+            disabled={isSaving || saveStatus === "saved" || saveStatus === "already"}
+            className={`relative min-w-44 overflow-hidden rounded-lg px-6 py-2 font-bold transition-all duration-300 disabled:cursor-not-allowed ${
+              saveStatus === "saved"
+                ? "bg-green-400 text-[#07140b] shadow-[0_0_28px_rgba(74,222,128,0.45)]"
+                : saveStatus === "already"
+                  ? "bg-amber-400 text-[#1c1202] shadow-[0_0_28px_rgba(251,191,36,0.4)]"
+                  : isSaving
+                    ? "text-white shadow-[0_0_30px_rgba(168,85,247,0.35)]"
+                    : "bg-[#f5f5f5] text-[#111111] hover:bg-[#e0e0e0]"
+            }`}
+            style={
+              isSaving
+                ? {
+                    background:
+                      "linear-gradient(90deg, #7c3aed, #06b6d4, #7c3aed)",
+                    backgroundSize: "200% 100%",
+                    animation: "saveShimmer 1.1s linear infinite",
+                  }
+                : undefined
+            }
           >
-            {isSaving ? "Saving..." : "Save Review"}
+            {isSaving ? (
+              <span className="flex items-center justify-center gap-3">
+                <span className="relative h-5 w-5">
+                  <span className="absolute inset-0 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] animate-pulse">
+                    ↓
+                  </span>
+                </span>
+                <span className="font-mono text-sm tracking-wide">
+                  Securing Review...
+                </span>
+              </span>
+            ) : saveStatus === "saved" ? (
+              <span
+                className="flex items-center justify-center gap-2"
+                style={{ animation: "saveSuccessPop 0.5s ease forwards" }}
+              >
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#07140b] text-xs text-green-300">
+                  ✓
+                </span>
+                Review Saved!
+              </span>
+            ) : saveStatus === "already" ? (
+              <span
+                className="flex items-center justify-center gap-2"
+                style={{ animation: "saveSuccessPop 0.5s ease forwards" }}
+              >
+                <span className="animate-pulse">✦</span>
+                Already Saved
+                <span className="animate-pulse">✦</span>
+              </span>
+            ) : (
+              "Save Review"
+            )}
           </button>
         )}
       </div>
