@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 const languageStyles = {
   javascript: "bg-yellow-400/10 text-yellow-400 border border-yellow-400/20",
   python: "bg-blue-400/10 text-blue-400 border border-blue-400/20",
@@ -9,6 +11,7 @@ const languageStyles = {
 };
 
 export default function HistoryCard({ review, onDelete, onView }) {
+  const [flipped, setFlipped] = useState(false);
   const score = review.result?.overallScore ?? 0;
   const scoreColor =
     score < 50
@@ -24,42 +27,81 @@ export default function HistoryCard({ review, onDelete, onView }) {
   }).format(new Date(review.savedAt));
 
   return (
-    <article className="animate-fade-in cursor-pointer rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] p-5 text-[#f5f5f5] transition-all hover:border-[#3a3a3a]">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <span
-          className={`px-3 py-1 rounded-md uppercase tracking-wide text-xs font-bold ${languageStyles[review.language?.toLowerCase()] ?? languageStyles.react}`}
-        >
-          {review.language}
-        </span>
-        <time dateTime={review.savedAt} className="text-sm font-medium text-[#606060]">
-          {date}
-        </time>
+    <article
+      className="group cursor-pointer relative min-h-64"
+      style={{ perspective: "1000px", transformStyle: "preserve-3d" }}
+      onMouseEnter={() => setFlipped(true)}
+      onMouseLeave={() => setFlipped(false)}
+    >
+      {/* Front face */}
+      <div
+        className="absolute inset-0 min-h-64 rounded-xl bg-[#1c1c1c] border border-[#2a2a2a] p-5 transition-transform duration-500 backface-hidden"
+        style={{
+          backfaceVisibility: "hidden",
+          transform: flipped ? "rotateY(-180deg)" : "rotateY(0deg)",
+        }}
+      >
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <span
+            className={`px-3 py-1 rounded-md uppercase tracking-wide text-xs font-bold ${languageStyles[review.language?.toLowerCase()] ?? languageStyles.react}`}
+          >
+            {review.language}
+          </span>
+          <time
+            dateTime={review.savedAt}
+            className="text-sm font-medium text-[#606060]"
+          >
+            {date}
+          </time>
+        </div>
+
+        <div className="mb-3 flex items-baseline gap-1">
+          <span className={`text-5xl font-black ${scoreColor}`}>{score}</span>
+          <span className="text-sm font-normal text-zinc-600">/100</span>
+        </div>
+
+        <p className="text-sm leading-relaxed text-[#a0a0a0] overflow-hidden">
+          {review.result?.summary}
+        </p>
       </div>
 
-      <div className="mb-3 flex items-baseline gap-1">
-        <span className={`text-5xl font-black ${scoreColor}`}>{score}</span>
-        <span className="text-sm font-normal text-zinc-600">/100</span>
-      </div>
-
-      <p className="mb-5 text-sm leading-relaxed text-[#a0a0a0]">
-        {review.result?.summary}
-      </p>
-
-      <div className="mt-4 flex items-center justify-between border-t border-[#2a2a2a] pt-4">
-        <button
-          type="button"
-          onClick={() => onView(review)}
-          className="text-sm font-medium text-[#f5f5f5] transition-colors hover:text-[#a0a0a0]"
+      {/* Back face */}
+      <div
+        className="absolute inset-0 min-h-64 rounded-xl bg-[#111111] border border-green-400/30 p-5 flex flex-col items-center transition-transform duration-500"
+        style={{
+          backfaceVisibility: "hidden",
+          transform: flipped ? "rotateY(0deg)" : "rotateY(180deg)",
+        }}
+      >
+        <div
+          className="text-7xl font-black mt-3 mb-4"
+          style={{
+            color:
+              score >= 75 ? "#4ade80" : score >= 50 ? "#facc15" : "#f87171",
+          }}
         >
-          View Report →
-        </button>
-        <button
-          type="button"
-          onClick={() => onDelete(review.id)}
-          className="bg-[#1c1c1c] border border-[#3a3a3a] text-[#f87171] text-xs px-3 py-1.5 rounded-lg transition-all font-medium"
-        >
-          Delete
-        </button>
+          {score}
+        </div>
+        <p className="text-[#a0a0a0] text-xs text-center leading-relaxed line-clamp-3 overflow-hidden">
+          {review.result?.summary?.slice(0, 80)}
+        </p>
+
+        <div className="mt-auto w-full flex items-center justify-between border-t border-[#2a2a2a] pt-4">
+          <button
+            type="button"
+            onClick={() => onView(review)}
+            className="text-[#f5f5f5] text-sm font-medium"
+          >
+            View Report →
+          </button>
+          <button
+            type="button"
+            onClick={() => onDelete(review.id)}
+            className="text-red-400 text-sm font-medium"
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </article>
   );
