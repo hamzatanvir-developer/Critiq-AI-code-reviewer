@@ -1,0 +1,38 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /reviews/{userId}/items/{reviewId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      allow get, list, delete: if isOwner();
+
+      allow create: if isOwner()
+        && request.resource.data.keys().hasOnly([
+          'code',
+          'language',
+          'result',
+          'savedAt'
+        ])
+        && request.resource.data.code is string
+        && request.resource.data.code.size() <= 50000
+        && request.resource.data.language in [
+          'JavaScript',
+          'Python',
+          'Java',
+          'C++',
+          'React'
+        ]
+        && request.resource.data.result is map
+        && request.resource.data.savedAt is string;
+
+      allow update: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

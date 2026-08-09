@@ -1,6 +1,13 @@
 const models = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"];
 const maxRetries = 3;
 const retryDelay = 3000;
+const allowedLanguages = new Set(["JavaScript", "Python", "Java", "C++", "React"]);
+const maxCodeLength = 50000;
+const rateLimitWindow = 60_000;
+const maxUserRequestsPerWindow = 6;
+const maxIpRequestsPerWindow = 20;
+const maxGeminiResponseLength = 250000;
+const requestLog = new Map();
 
 const rateLimitMock = {
   overallScore: 72,
@@ -74,6 +81,82 @@ function wait(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+async function verifyFirebaseUser(request) {
+  const authorization = request.headers.get("authorization") ?? "";
+  const [scheme, idToken] = authorization.split(" ");
+
+  if (scheme !== "Bearer" || !idToken || idToken.length > 4096) {
+    return null;
+  }
+
+  const firebaseApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+
+  if (!firebaseApiKey) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(firebaseApiKey)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
+      },
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    return data.users?.[0]?.localId ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function exceedsRateLimit(key, limit) {
+  const now = Date.now();
+  const recentRequests = (requestLog.get(key) ?? []).filter(
+    (timestamp) => now - timestamp < rateLimitWindow,
+  );
+
+  if (recentRequests.length >= limit) {
+    requestLog.set(key, recentRequests);
+    return true;
+  }
+
+  recentRequests.push(now);
+  requestLog.set(key, recentRequests);
+  return false;
+}
+
+function getClientIp(request) {
+  return (
+    request.headers.get("x-vercel-forwarded-for") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown"
+  );
+}
+
+function isTrustedBrowserRequest(request) {
+  const origin = request.headers.get("origin");
+  const contentType = request.headers.get("content-type") ?? "";
+
+  if (!origin || !contentType.toLowerCase().startsWith("application/json")) {
+    return false;
+  }
+
+  try {
+    return origin === new URL(request.url).origin;
+  } catch {
+    return false;
+  }
+}
+
 function buildPrompt(code, language) {
   return `You are an expert code reviewer. Analyze this ${language} code and return ONLY a valid JSON response with exactly this structure, no markdown, no backticks, just pure JSON:
 {
@@ -139,6 +222,33 @@ ${code}`;
 }
 
 export async function POST(request) {
+  if (!isTrustedBrowserRequest(request)) {
+    return Response.json({ error: "Request rejected." }, { status: 403 });
+  }
+
+  const userId = await verifyFirebaseUser(request);
+
+  if (!userId) {
+    return Response.json({ error: "Authentication required." }, { status: 401 });
+  }
+
+  const clientIp = getClientIp(request);
+  const userRateLimited = exceedsRateLimit(
+    `user:${userId}`,
+    maxUserRequestsPerWindow,
+  );
+  const ipRateLimited = exceedsRateLimit(
+    `ip:${clientIp}`,
+    maxIpRequestsPerWindow,
+  );
+
+  if (userRateLimited || ipRateLimited) {
+    return Response.json(
+      { error: "Too many requests. Please wait a minute and try again." },
+      { status: 429 },
+    );
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
@@ -161,11 +271,12 @@ export async function POST(request) {
   if (
     typeof code !== "string" ||
     code.trim().length === 0 ||
+    code.length > maxCodeLength ||
     typeof language !== "string" ||
-    language.trim().length === 0
+    !allowedLanguages.has(language)
   ) {
     return Response.json(
-      { error: "Code and language are required." },
+      { error: "Invalid code or language." },
       { status: 400 },
     );
   }
@@ -186,7 +297,13 @@ export async function POST(request) {
             },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                responseMimeType: "application/json",
+                maxOutputTokens: 8192,
+              },
             }),
+            cache: "no-store",
+            signal: AbortSignal.timeout(45_000),
           },
         );
 
@@ -212,6 +329,11 @@ export async function POST(request) {
 
         if (!text) {
           console.error(`Gemini ${model} returned no response text.`);
+          break;
+        }
+
+        if (text.length > maxGeminiResponseLength) {
+          console.error(`Gemini ${model} returned an oversized response.`);
           break;
         }
 
