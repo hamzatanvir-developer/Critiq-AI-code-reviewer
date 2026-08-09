@@ -243,3 +243,60 @@ body {
 		opacity: 1;
 	}
 }
+
+@keyframes historyCardShuffle {
+	0% {
+		transform: translate(-50%, -18px) rotate(-7deg) scale(0.78);
+		opacity: 0;
+	}
+
+	25% {
+		opacity: 1;
+	}
+
+	65% {
+		transform: translate(-50%, 12px) rotate(3deg) scale(1);
+		opacity: 1;
+	}
+
+	100% {
+		transform: translate(-50%, 58px) rotate(0deg) scale(0.72);
+		opacity: 0;
+	}
+}
+
+@keyframes historyScan {
+	0%,
+	100% {
+		transform: translateY(-42px);
+		opacity: 0.25;
+	}
+
+	50% {
+		transform: translateY(44px);
+		opacity: 1;
+	}
+}
+
+@keyframes historyDot {
+	0%,
+	100% {
+		transform: translateY(0) scale(0.65);
+		opacity: 0.25;
+	}
+
+	50% {
+		transform: translateY(-5px) scale(1);
+		opacity: 1;
+	}
+}
+
+@keyframes historyProgress {
+	0% {
+		transform: translateX(-110%);
+	}
+
+	100% {
+		transform: translateX(210%);
+	}
+}

@@ -90,7 +90,56 @@ export default function HistoryPage() {
         </h1>
 
         {loading ? (
-          <p className="py-20 text-center text-[#a0a0a0]">Loading reviews...</p>
+          <section className="flex min-h-[420px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-cyan-400/10 bg-[#141414] px-6 py-16 text-center shadow-[inset_0_0_80px_rgba(34,211,238,0.025)]">
+            <div className="relative mb-7 h-32 w-40">
+              <div className="absolute inset-x-4 bottom-1 h-14 rounded-xl border border-cyan-400/30 bg-[#0d1719] shadow-[0_0_28px_rgba(34,211,238,0.16)]">
+                <div className="absolute inset-x-5 top-3 h-1 rounded-full bg-cyan-300/30" />
+                <div className="absolute inset-x-8 top-7 h-1 rounded-full bg-cyan-300/15" />
+              </div>
+
+              {[0, 1, 2].map((index) => (
+                <div
+                  key={index}
+                  className="absolute left-1/2 top-0 h-20 w-16 rounded-lg border border-[#3a3a3a] bg-[#1c1c1c] p-2 shadow-xl"
+                  style={{
+                    animation: `historyCardShuffle 1.5s ease-in-out ${index * 0.28}s infinite`,
+                  }}
+                >
+                  <div className="mb-2 h-2 w-6 rounded-full bg-cyan-400/70" />
+                  <div className="mb-1.5 h-1 w-full rounded-full bg-[#3a3a3a]" />
+                  <div className="mb-1.5 h-1 w-4/5 rounded-full bg-[#333333]" />
+                  <div className="h-1 w-2/3 rounded-full bg-[#2a2a2a]" />
+                </div>
+              ))}
+
+              <div
+                className="absolute inset-x-2 top-1/2 h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_12px_rgba(103,232,249,0.9)]"
+                style={{ animation: "historyScan 1.3s ease-in-out infinite" }}
+              />
+            </div>
+
+            <p className="font-mono text-sm font-bold tracking-[0.28em] text-cyan-300">
+              LOADING HISTORY
+            </p>
+            <div className="mt-3 flex items-center gap-1.5">
+              {[0, 1, 2, 3, 4].map((index) => (
+                <span
+                  key={index}
+                  className="h-1.5 w-1.5 rounded-full bg-cyan-400"
+                  style={{
+                    animation: `historyDot 1s ease-in-out ${index * 0.12}s infinite`,
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="mt-6 h-1 w-48 overflow-hidden rounded-full bg-[#2a2a2a]">
+              <div
+                className="h-full w-1/2 rounded-full bg-gradient-to-r from-cyan-500 via-sky-300 to-purple-400"
+                style={{ animation: "historyProgress 1.4s ease-in-out infinite" }}
+              />
+            </div>
+          </section>
         ) : reviews.length === 0 ? (
           <section className="py-20 text-center">
             <p className="mb-4 text-[#a0a0a0]">
