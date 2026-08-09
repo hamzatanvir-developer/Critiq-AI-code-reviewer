@@ -69,13 +69,54 @@ export default function CodeEditor({ onAnalyze, loading }) {
       </div>
 
       <div className="border-t border-[#2a2a2a] bg-[#161616] px-4 py-3">
-        <button
-          type="submit"
-          disabled={loading || code.trim().length === 0}
-          className="w-full rounded-lg bg-[#f5f5f5] py-3 text-base font-bold text-[#111111] transition-all hover:bg-[#e0e0e0] disabled:cursor-not-allowed disabled:opacity-80"
-        >
-          {loading ? "Analyzing..." : "Analyze Code"}
-        </button>
+        {loading ? (
+          <div className="w-full py-4 flex flex-col items-center justify-center gap-3 bg-[#111111] rounded-lg border border-[#2a2a2a]">
+            <div className="flex items-center gap-1">
+              {["A", "n", "a", "l", "y", "z", "i", "n", "g"].map(
+                (letter, i) => (
+                  <span
+                    key={i}
+                    className="text-green-400 font-mono font-bold text-lg inline-block"
+                    style={{
+                      animation: "wave 0.8s ease-in-out infinite",
+                      animationDelay: `${i * 0.1}s`,
+                    }}
+                  >
+                    {letter}
+                  </span>
+                ),
+              )}
+              <span className="text-green-400 font-mono font-bold text-lg ml-1 animate-pulse">
+                ...
+              </span>
+            </div>
+
+            <div className="flex gap-1.5">
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <div
+                  key={i}
+                  className="w-1.5 h-6 bg-green-400 rounded-full"
+                  style={{
+                    animation: "equalizer 1s ease-in-out infinite",
+                    animationDelay: `${i * 0.12}s`,
+                  }}
+                />
+              ))}
+            </div>
+
+            <p className="text-[#606060] text-xs font-mono animate-pulse">
+              Scanning your code for issues...
+            </p>
+          </div>
+        ) : (
+          <button
+            type="submit"
+            disabled={loading || code.trim().length === 0}
+            className="w-full rounded-lg bg-[#f5f5f5] py-3 text-base font-bold text-[#111111] transition-all hover:bg-[#e0e0e0] disabled:cursor-not-allowed disabled:opacity-80"
+          >
+            Analyze Code
+          </button>
+        )}
       </div>
     </form>
   );

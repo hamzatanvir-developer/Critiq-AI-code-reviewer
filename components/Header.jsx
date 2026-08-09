@@ -22,13 +22,37 @@ export default function Header() {
       <nav className="flex items-center justify-between bg-[#1c1c1c]/90 backdrop-blur-xl border border-[#2a2a2a] rounded-2xl px-8 py-4 shadow-[0_8px_32px_rgba(0,0,0,0.4)] w-full max-w-5xl">
         
         {/* Logo - Left */}
-        <Link href="/" className="flex items-center gap-2.5 hover:animate-bounce">
-          <div className="w-8 h-8 rounded-lg bg-[#f5f5f5] flex items-center justify-center shadow-none">
-            <span className="text-[#111111] text-xs font-black">C</span>
+        <Link href="/" className="flex items-center gap-2.5">
+          {/* Spinning gradient logo */}
+          <div
+            className="relative w-10 h-10 flex items-center justify-center"
+            style={{ animation: 'logoSpin 0.8s ease forwards' }}
+          >
+            <div
+              className="absolute inset-0 rounded-xl"
+              style={{
+                background: 'conic-gradient(from 0deg, #4ade80, #06b6d4, #a855f7, #f59e0b, #4ade80)',
+                animation: 'spinGradient 2s linear infinite',
+                borderRadius: '12px',
+              }}
+            />
+            <div className="absolute inset-[2px] rounded-[10px] bg-[#111111] flex items-center justify-center z-10">
+              <span className="text-white font-black text-lg">C</span>
+            </div>
           </div>
-          <span className="text-lg font-bold text-[#f5f5f5]">
-            Critiq
-          </span>
+
+          {/* Name ejects from right after logo appears */}
+          <div
+            className="overflow-hidden"
+            style={{ animation: 'nameEject 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s both' }}
+          >
+            <div className="flex flex-col">
+              <span className="text-lg font-black text-[#f5f5f5] leading-none tracking-tight">
+                Critiq
+              </span>
+             
+            </div>
+          </div>
         </Link>
 
         {/* Nav - Center */}

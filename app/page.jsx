@@ -20,6 +20,7 @@ export default function HomePage() {
   const [analyzedLanguage, setAnalyzedLanguage] = useState("");
 
   async function handleAnalyze(code, language) {
+    const loadingStartedAt = Date.now();
     setLoading(true);
     setError(null);
     setResult(null);
@@ -43,6 +44,14 @@ export default function HomePage() {
     } catch {
       setError("Unable to analyze the code. Please try again.");
     } finally {
+      const remainingAnimationTime = 1800 - (Date.now() - loadingStartedAt);
+
+      if (remainingAnimationTime > 0) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, remainingAnimationTime),
+        );
+      }
+
       setLoading(false);
     }
   }

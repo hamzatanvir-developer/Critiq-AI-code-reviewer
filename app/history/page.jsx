@@ -104,7 +104,7 @@ export default function HistoryPage() {
             </button>
           </section>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
             {reviews.map((review) => (
               <HistoryCard
                 key={review.id}
@@ -119,26 +119,64 @@ export default function HistoryPage() {
 
       {selectedReview && (
         <div
-          className="fixed inset-0 z-50 overflow-y-auto bg-[#111111]/80 px-4 py-10 backdrop-blur-sm sm:px-6"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ animation: "backdropIn 0.3s ease forwards" }}
           role="dialog"
           aria-modal="true"
           aria-label="Review report"
         >
-          <div className="mx-auto w-full max-w-5xl">
-            <div className="mb-3 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setSelectedReview(null)}
-                className="rounded-md border border-[#2a2a2a] bg-[#1c1c1c] px-4 py-2 text-sm font-medium text-[#a0a0a0] transition-colors hover:text-[#f5f5f5]"
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            onClick={() => setSelectedReview(null)}
+          />
+
+          <div
+            className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-[#1c1c1c] border border-[#2a2a2a] rounded-2xl shadow-[0_0_80px_rgba(74,222,128,0.15)]"
+            style={{
+              animation:
+                "modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedReview(null)}
+              aria-label="Close report"
+              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-[#111111] border border-[#2a2a2a] text-[#a0a0a0] hover:text-[#f5f5f5] hover:border-green-400 transition-all flex items-center justify-center text-sm"
+            >
+              ✕
+            </button>
+
+            <div className="p-6 pr-16 border-b border-[#2a2a2a] flex items-center gap-4">
+              <div
+                className="text-5xl font-black"
+                style={{
+                  color:
+                    selectedReview.result?.overallScore >= 75
+                      ? "#4ade80"
+                      : selectedReview.result?.overallScore >= 50
+                        ? "#facc15"
+                        : "#f87171",
+                }}
               >
-                Close
-              </button>
+                {selectedReview.result?.overallScore}
+              </div>
+              <div>
+                <p className="text-lg font-bold text-[#f5f5f5]">
+                  {selectedReview.language} Review
+                </p>
+                <p className="text-sm text-[#606060]">
+                  Overall score out of 100
+                </p>
+              </div>
             </div>
-            <ReviewCard
-              result={selectedReview.result}
-              onSave={() => {}}
-              isSaving={false}
-            />
+
+            <div className="p-6">
+              <ReviewCard
+                result={selectedReview.result}
+                onSave={() => {}}
+                isSaving={false}
+              />
+            </div>
           </div>
         </div>
       )}
