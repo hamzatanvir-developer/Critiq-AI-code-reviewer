@@ -19,6 +19,9 @@ export function AuthProvider({ children }) {
     const unsubscribe = subscribeToAuthChanges((currentUser) => {
       setUser(currentUser);
       setLoading(false);
+    }, () => {
+      setUser(null);
+      setLoading(false);
     });
 
     return unsubscribe;
