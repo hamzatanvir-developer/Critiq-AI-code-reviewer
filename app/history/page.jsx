@@ -119,7 +119,7 @@ export default function HistoryPage() {
 
                 {deletingId === review.id && (
                   <div className="absolute inset-0 z-40 flex flex-col items-center justify-center overflow-hidden rounded-xl border border-red-400/20 bg-[#0b0b0b]/95 backdrop-blur-md">
-                    <div className="relative mb-5 h-24 w-24">
+                    <div className="relative mb-2 h-24 w-24">
                       <span
                         className="absolute left-5 top-0 h-3 w-3 rounded-sm bg-red-300"
                         style={{ animation: "paperDrop 1s ease-in infinite" }}
@@ -174,11 +174,8 @@ export default function HistoryPage() {
                     <p className="font-mono text-sm font-bold tracking-[0.2em] text-red-300">
                       DELETING REVIEW
                     </p>
-                    <p className="mt-2 text-xs text-[#606060]">
-                      Sending it to the void...
-                    </p>
 
-                    <div className="mt-5 h-1 w-36 overflow-hidden rounded-full bg-[#2a2a2a]">
+                    <div className="mt-3 h-1 w-36 overflow-hidden rounded-full bg-[#2a2a2a]">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-red-500 via-orange-400 to-yellow-300"
                         style={{
