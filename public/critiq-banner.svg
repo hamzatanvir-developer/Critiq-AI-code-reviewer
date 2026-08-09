@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="460" viewBox="0 0 1400 460" role="img" aria-labelledby="title description">
+  <title id="title">Critiq</title>
+  <description id="description">AI-powered code reviews, instantly.</description>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0a0a" />
+      <stop offset="0.55" stop-color="#151515" />
+      <stop offset="1" stop-color="#0d1110" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4ade80" />
+      <stop offset="0.5" stop-color="#06b6d4" />
+      <stop offset="1" stop-color="#a855f7" />
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#4ade80" stop-opacity="0.18" />
+      <stop offset="1" stop-color="#4ade80" stop-opacity="0" />
+    </radialGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="14" />
+    </filter>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#000" flood-opacity="0.7" />
+    </filter>
+    <pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse">
+      <path d="M42 0H0V42" fill="none" stroke="#fff" stroke-opacity="0.035" />
+    </pattern>
+  </defs>
+
+  <rect width="1400" height="460" rx="28" fill="url(#background)" />
+  <rect width="1400" height="460" rx="28" fill="url(#grid)" />
+  <circle cx="180" cy="230" r="310" fill="url(#glow)" />
+  <circle cx="1270" cy="40" r="260" fill="#a855f7" opacity="0.045" filter="url(#softGlow)" />
+
+  <g opacity="0.7">
+    <path d="M1030 105h175" stroke="#4ade80" stroke-width="3" stroke-linecap="round" />
+    <path d="M1080 135h230" stroke="#06b6d4" stroke-opacity="0.55" stroke-width="3" stroke-linecap="round" />
+    <path d="M990 165h145" stroke="#a855f7" stroke-opacity="0.55" stroke-width="3" stroke-linecap="round" />
+    <circle cx="1000" cy="105" r="5" fill="#4ade80" />
+    <circle cx="1050" cy="135" r="5" fill="#06b6d4" />
+    <circle cx="960" cy="165" r="5" fill="#a855f7" />
+  </g>
+
+  <g transform="translate(128 120)" filter="url(#shadow)">
+    <rect width="220" height="220" rx="54" fill="url(#accent)" />
+    <rect x="5" y="5" width="210" height="210" rx="50" fill="#111111" />
+    <path d="M183 58c-18-21-42-31-71-31-54 0-91 38-91 84s37 84 91 84c30 0 55-11 73-33l-35-28c-9 11-21 17-36 17-24 0-40-16-40-40s16-40 40-40c14 0 26 6 35 16z" fill="url(#accent)" />
+  </g>
+
+  <g transform="translate(410 145)">
+    <text x="0" y="82" fill="#f5f5f5" font-family="Inter, Arial, sans-serif" font-size="104" font-weight="900" letter-spacing="-5">Critiq</text>
+    <text x="5" y="138" fill="#a0a0a0" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="500" letter-spacing="1">AI-powered code reviews, instantly.</text>
+    <g transform="translate(5 174)">
+      <rect width="345" height="48" rx="24" fill="#4ade80" fill-opacity="0.09" stroke="#4ade80" stroke-opacity="0.28" />
+      <circle cx="25" cy="24" r="6" fill="#4ade80" />
+      <text x="44" y="31" fill="#86efac" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="17">Analyze • Improve • Ship</text>
+    </g>
+  </g>
+
+  <rect x="1" y="1" width="1398" height="458" rx="27" fill="none" stroke="url(#accent)" stroke-opacity="0.26" stroke-width="2" />
+</svg>
