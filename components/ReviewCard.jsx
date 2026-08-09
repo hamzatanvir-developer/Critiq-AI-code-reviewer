@@ -177,10 +177,10 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
   }
 
   return (
-    <section className="mx-auto w-full max-w-4xl animate-fade-in rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-8 text-white shadow-[0_0_40px_rgba(0,0,0,0.15)]">
+    <section className="mx-auto w-full max-w-4xl animate-fade-in overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-4 text-white shadow-[0_0_40px_rgba(0,0,0,0.15)] sm:p-8">
       <div className="flex flex-col items-center text-center">
         <div
-          className={`mx-auto mb-6 flex h-32 w-32 flex-col items-center justify-center rounded-full border-4 glow-pulse ${scoreColor}`}
+          className={`mx-auto mb-6 flex h-28 w-28 flex-col items-center justify-center rounded-full border-4 glow-pulse sm:h-32 sm:w-32 ${scoreColor}`}
         >
           <span className="text-4xl font-bold">{result.overallScore}</span>
           <span className="text-sm text-zinc-500">/100</span>
@@ -191,14 +191,14 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
       </div>
 
       <div
-        className="mb-8 relative overflow-hidden rounded-2xl p-6"
+        className="relative mb-8 overflow-hidden rounded-2xl p-4 sm:p-6"
         style={{
           background: "linear-gradient(135deg, #161616 0%, #1a1a1a 100%)",
           border: "1px solid #2a2a2a",
         }}
       >
         {/* Header row */}
-        <div className="flex items-start justify-between mb-6 relative z-10">
+        <div className="relative z-10 mb-6 flex flex-col gap-4 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between">
           <div>
             <p className="text-xs uppercase tracking-widest text-[#606060] mb-1 font-medium">
               Code Complexity
@@ -208,7 +208,7 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
             </h3>
           </div>
           <div
-            className="flex flex-col items-end"
+            className="flex flex-row items-baseline gap-2 min-[420px]:flex-col min-[420px]:items-end min-[420px]:gap-0"
           >
             <span
               className="text-5xl font-black"
@@ -265,7 +265,7 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
       </div>
 
       <div className="mb-6 border-b border-[#2a2a2a]">
-        <div className="flex gap-6 overflow-x-auto" role="tablist">
+        <div className="flex gap-4 overflow-x-auto pb-1 sm:gap-6" role="tablist">
           {tabs.map((tab) => (
             <button
               key={tab}
@@ -297,8 +297,8 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
             </p>
           )
         ) : activeTab === "Refactored" ? (
-          <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] p-5">
-            <div className="mb-4 flex items-center justify-between gap-4">
+          <div className="rounded-lg border border-[#2a2a2a] bg-[#161616] p-3 sm:p-5">
+            <div className="mb-4 flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <h3 className="text-lg font-semibold text-white">Improved Code</h3>
@@ -317,7 +317,7 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
             </div>
 
             {result.refactoredCode && result.refactoredCode.trim().length > 0 ? (
-              <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl bg-[#111111] p-6 font-mono text-sm text-green-400">
+              <pre className="max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded-xl bg-[#111111] p-3 font-mono text-xs text-green-400 sm:p-6 sm:text-sm">
                 <code>{result.refactoredCode}</code>
               </pre>
             ) : (
@@ -335,12 +335,12 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
         )}
       </div>
 
-      <div className="mt-8 flex flex-wrap justify-end gap-3 border-t border-[#2a2a2a] pt-6">
+      <div className="mt-8 flex flex-col gap-3 border-t border-[#2a2a2a] pt-6 min-[420px]:flex-row min-[420px]:flex-wrap min-[420px]:justify-end">
         <button
           type="button"
           onClick={copyReport}
           disabled={copied}
-          className="rounded-lg border border-[#3a3a3a] bg-[#161616] px-6 py-2 text-zinc-400 transition-colors hover:text-white"
+          className="w-full rounded-lg border border-[#3a3a3a] bg-[#161616] px-6 py-2 text-zinc-400 transition-colors hover:text-white min-[420px]:w-auto"
         >
           {copied ? "Copied!" : "Copy Report"}
         </button>
@@ -349,7 +349,7 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
             type="button"
             onClick={onSave}
             disabled={isSaving || saveStatus === "saved" || saveStatus === "already"}
-            className={`relative min-w-44 overflow-hidden rounded-lg px-6 py-2 font-bold transition-all duration-300 disabled:cursor-not-allowed ${
+            className={`relative w-full overflow-hidden rounded-lg px-6 py-2 font-bold transition-all duration-300 disabled:cursor-not-allowed min-[420px]:w-auto min-[420px]:min-w-44 ${
               saveStatus === "saved"
                 ? "bg-green-400 text-[#07140b] shadow-[0_0_28px_rgba(74,222,128,0.45)]"
                 : saveStatus === "already"

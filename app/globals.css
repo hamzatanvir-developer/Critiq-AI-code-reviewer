@@ -4,6 +4,19 @@ html,
 body {
 	background-color: #111111;
 	min-height: 100%;
+	max-width: 100%;
+	overflow-x: hidden;
+}
+
+* {
+	min-width: 0;
+}
+
+img,
+svg,
+video,
+canvas {
+	max-width: 100%;
 }
 
 :root {

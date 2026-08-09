@@ -32,6 +32,7 @@ export default function HistoryCard({ review, onDelete, onView }) {
       style={{ perspective: "1000px", transformStyle: "preserve-3d" }}
       onMouseEnter={() => setFlipped(true)}
       onMouseLeave={() => setFlipped(false)}
+      onClick={() => setFlipped((current) => !current)}
     >
       {/* Front face */}
       <div
@@ -81,7 +82,7 @@ export default function HistoryCard({ review, onDelete, onView }) {
       >
         <div className="flex-1 flex flex-col items-center justify-center">
           <div
-            className="text-7xl font-black mt-3 mb-4"
+            className="mb-4 mt-3 text-6xl font-black sm:text-7xl"
             style={{
               color:
                 score >= 75
@@ -101,14 +102,20 @@ export default function HistoryCard({ review, onDelete, onView }) {
         <div className="shrink-0 mt-auto w-full flex items-center justify-between border-t border-[#2a2a2a] pt-4">
           <button
             type="button"
-            onClick={() => onView(review)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onView(review);
+            }}
             className="text-[#f5f5f5] text-sm font-medium"
           >
             View Report →
           </button>
           <button
             type="button"
-            onClick={() => onDelete(review.id)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete(review.id);
+            }}
             className="text-red-400 text-sm font-medium"
           >
             Delete

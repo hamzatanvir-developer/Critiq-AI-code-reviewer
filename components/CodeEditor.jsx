@@ -64,7 +64,7 @@ export default function CodeEditor({ onAnalyze, loading }) {
           onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
           placeholder="Paste your code here..."
           spellCheck="false"
-          className="w-full min-h-[400px] resize-none bg-[#111111] p-6 font-mono text-sm leading-relaxed text-[#a0ffb0] outline-none placeholder:text-zinc-700"
+          className="min-h-[300px] w-full resize-none bg-[#111111] p-4 font-mono text-xs leading-relaxed text-[#a0ffb0] outline-none placeholder:text-zinc-700 sm:min-h-[400px] sm:p-6 sm:text-sm"
         />
       </div>
 
@@ -110,7 +110,7 @@ export default function CodeEditor({ onAnalyze, loading }) {
             </div>
 
             <p
-              className="text-xs font-mono animate-pulse"
+              className="px-3 text-center font-mono text-xs animate-pulse"
               style={{ color: "#fbbf24" }}
             >
               Scanning your code for issues...

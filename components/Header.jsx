@@ -18,8 +18,8 @@ export default function Header() {
   }
 
   return (
-    <div className="w-full flex justify-center pt-5 px-6 fixed top-0 left-0 z-50">
-      <nav className="flex items-center justify-between bg-[#1c1c1c]/90 backdrop-blur-xl border border-[#2a2a2a] rounded-2xl px-8 py-4 shadow-[0_8px_32px_rgba(0,0,0,0.4)] w-full max-w-5xl">
+    <div className="fixed left-0 top-0 z-50 flex w-full justify-center px-2 pt-3 sm:px-6 sm:pt-5">
+      <nav className="flex w-full max-w-5xl items-center justify-between gap-2 rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c]/90 px-3 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:px-6 sm:py-4 lg:px-8">
         
         {/* Logo - Left */}
         <Link href="/" className="flex items-center gap-2.5">
@@ -43,7 +43,7 @@ export default function Header() {
 
           {/* Name ejects from right after logo appears */}
           <div
-            className="overflow-hidden"
+            className="hidden overflow-hidden sm:block"
             style={{ animation: 'nameEject 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s both' }}
           >
             <div className="flex flex-col">
@@ -56,27 +56,27 @@ export default function Header() {
         </Link>
 
         {/* Nav - Center */}
-        <div className="flex items-center gap-1 bg-[#111111] rounded-xl p-1">
-          <Link href="/" className="text-zinc-400 hover:text-white hover:bg-purple-900/30 transition-all text-sm px-4 py-2 rounded-lg">
+        <div className="flex min-w-0 items-center gap-0.5 rounded-xl bg-[#111111] p-1 sm:gap-1">
+          <Link href="/" className="rounded-lg px-2.5 py-2 text-xs text-zinc-400 transition-all hover:bg-purple-900/30 hover:text-white sm:px-4 sm:text-sm">
             Home
           </Link>
-          <Link href="/history" className="text-zinc-400 hover:text-white hover:bg-purple-900/30 transition-all text-sm px-4 py-2 rounded-lg">
+          <Link href="/history" className="rounded-lg px-2.5 py-2 text-xs text-zinc-400 transition-all hover:bg-purple-900/30 hover:text-white sm:px-4 sm:text-sm">
             History
           </Link>
         </div>
 
         {/* Right - Auth */}
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
           {user ? (
             <>
-              <div className="flex items-center gap-2.5">
+              <div className="hidden items-center gap-2.5 min-[390px]:flex">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center shadow-[0_0_10px_rgba(124,58,237,0.4)]">
                   <span className="text-white text-sm font-bold">{getInitial(user.email)}</span>
                 </div>
               </div>
               <button
                 onClick={handleLogout}
-                className="bg-[#f5f5f5] text-[#111111] hover:bg-[#e0e0e0] rounded-xl px-5 py-2 text-sm font-medium transition-all"
+                className="rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-medium text-[#111111] transition-all hover:bg-[#e0e0e0] sm:px-5 sm:text-sm"
               >
                 <span className="relative">Logout</span>
               </button>
@@ -84,7 +84,7 @@ export default function Header() {
           ) : (
             <Link
               href="/auth"
-              className="bg-[#f5f5f5] text-[#111111] hover:bg-[#e0e0e0] rounded-xl px-5 py-2 text-sm font-medium transition-all"
+              className="rounded-xl bg-[#f5f5f5] px-3 py-2 text-xs font-medium text-[#111111] transition-all hover:bg-[#e0e0e0] sm:px-5 sm:text-sm"
             >
               Login
             </Link>

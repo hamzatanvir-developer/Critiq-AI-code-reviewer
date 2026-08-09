@@ -17,7 +17,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className={`${inter.variable} ${spaceGrotesk.variable} bg-[#111111] min-h-full flex flex-col pt-32`}>
+      <body className={`${inter.variable} ${spaceGrotesk.variable} min-h-full overflow-x-hidden bg-[#111111] pt-24 sm:pt-32 flex flex-col`}>
         <AuthProvider>
           <Header />
           {children}

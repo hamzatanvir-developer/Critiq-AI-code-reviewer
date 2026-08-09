@@ -83,7 +83,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#111111] px-6 py-8 text-[#f5f5f5]">
+    <main className="min-h-screen bg-[#111111] px-3 py-6 text-[#f5f5f5] sm:px-6 sm:py-8">
       <div className="mx-auto w-full max-w-7xl">
         <h1 className="mb-8 pt-8 text-3xl font-bold font-space text-[#f5f5f5]">
           Review History
@@ -242,7 +242,7 @@ export default function HistoryPage() {
 
       {selectedReview && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
           style={{ animation: "backdropIn 0.3s ease forwards" }}
           role="dialog"
           aria-modal="true"
@@ -254,7 +254,7 @@ export default function HistoryPage() {
           />
 
           <div
-            className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-[#1c1c1c] border border-[#2a2a2a] rounded-2xl shadow-[0_0_80px_rgba(74,222,128,0.15)]"
+            className="relative max-h-[96dvh] w-full max-w-4xl overflow-x-hidden overflow-y-auto rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] shadow-[0_0_80px_rgba(74,222,128,0.15)] sm:max-h-[90vh]"
             style={{
               animation:
                 "modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
@@ -269,9 +269,9 @@ export default function HistoryPage() {
               ✕
             </button>
 
-            <div className="p-6 pr-16 border-b border-[#2a2a2a] flex items-center gap-4">
+            <div className="flex items-center gap-3 border-b border-[#2a2a2a] p-4 pr-14 sm:gap-4 sm:p-6 sm:pr-16">
               <div
-                className="text-5xl font-black"
+                className="text-4xl font-black sm:text-5xl"
                 style={{
                   color:
                     selectedReview.result?.overallScore >= 75
@@ -293,7 +293,7 @@ export default function HistoryPage() {
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-2 sm:p-6">
               <ReviewCard
                 result={selectedReview.result}
                 sourceCode={selectedReview.code}

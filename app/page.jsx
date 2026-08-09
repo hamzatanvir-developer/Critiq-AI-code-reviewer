@@ -172,7 +172,7 @@ export default function HomePage() {
     return (
       <main className="flex min-h-screen flex-col bg-[#111111] text-[#f5f5f5]">
         <section className="flex flex-1 flex-col items-center justify-center px-4 text-center">
-          <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight mb-4 text-center">
+          <h1 className="mb-4 text-center text-3xl font-bold leading-tight text-white sm:text-5xl md:text-7xl">
   <span className="block">
     {"AI-powered code".split("").map((char, i) => (
       <span key={i} className="inline-block" style={{ animation: "wave 2s ease-in-out infinite", animationDelay: `${i * 0.04}s` }}>
@@ -249,8 +249,8 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#111111] px-4 py-12 text-white sm:px-6">
-      <div className="mx-auto w-full max-w-5xl pt-28 pb-12">
+    <main className="min-h-screen bg-[#111111] px-3 py-8 text-white sm:px-6 sm:py-12">
+      <div className="mx-auto w-full max-w-5xl pb-12 pt-16 sm:pt-28">
         <div className={result ? "space-y-8" : "flex min-h-[calc(100vh-6rem)] items-center justify-center"}>
           <div className={result ? "w-full space-y-8" : "w-full"}>
             <CodeEditor onAnalyze={handleAnalyze} loading={loading} />

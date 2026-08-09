@@ -51,7 +51,7 @@ export default function AuthPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#111111] px-4 text-white">
-      <section className="w-full max-w-md rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-8 shadow-[0_0_40px_rgba(0,0,0,0.15)]">
+      <section className="w-full max-w-md rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-5 shadow-[0_0_40px_rgba(0,0,0,0.15)] sm:p-8">
         <div className="text-center">
           <h1 className="font-space text-3xl font-bold bg-gradient-to-r from-[#f5f5f5] to-[#a0a0a0] bg-clip-text text-transparent">
             Critiq
