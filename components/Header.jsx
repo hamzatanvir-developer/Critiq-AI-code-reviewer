@@ -48,7 +48,7 @@ export default function Header() {
           >
             <div className="flex flex-col">
               <span className="text-lg font-black text-[#f5f5f5] leading-none tracking-tight">
-                Critiq
+                Critiq 
               </span>
              
             </div>
