@@ -128,4 +128,4 @@ export default function CodeEditor({ onAnalyze, loading }) {
       </div>
     </form>
   );
-}
+} 
