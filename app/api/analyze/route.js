@@ -158,67 +158,36 @@ function isTrustedBrowserRequest(request) {
 }
 
 function buildPrompt(code, language) {
-  return `You are an expert code reviewer. Analyze this ${language} code and return ONLY a valid JSON response with exactly this structure, no markdown, no backticks, just pure JSON:
+  return `You are a senior software engineer with 10+ years of experience.
+Analyze this ${language} code and return ONLY valid JSON with no markdown, no backticks.
+
+For the refactoredCode field you MUST:
+- Fix every single bug found
+- Fix every security vulnerability
+- Apply every performance improvement
+- Follow all best practices for ${language}
+- Add proper error handling everywhere it is missing
+- Add input validation
+- Improve variable and function naming
+- Add comments for complex logic
+- Make it genuinely production-ready code
+- The refactored code must be significantly better than the original
+- Do not just rename variables, actually rewrite and improve the logic
+
+Return this exact JSON structure:
 {
   "overallScore": number out of 100,
-  "bugs": [{ "line": "string", "issue": "string", "severity": "high" or "medium" or "low" }],
-  "security": [{ "issue": "string", "recommendation": "string" }],
-  "performance": [{ "issue": "string", "suggestion": "string" }],
-  "quality": [{ "issue": "string", "improvement": "string" }],
-  "refactoredCode": "the improved version of the entire code with all fixes applied",
-  "complexity": {
-    "level": "Simple" or "Moderate" or "Complex",
-    "score": number from 1 to 10,
-    "reasons": ["reason 1", "reason 2", "reason 3"]
-  },
-  "bestPractices": [
-    {
-      "rule": "rule name",
-      "status": "pass" or "fail",
-      "description": "explanation"
-    }
-  ],
-  "summary": "2-3 sentence summary of the code"
+  "bugs": [{ "line": string, "issue": string, "severity": "high" or "medium" or "low" }],
+  "security": [{ "issue": string, "recommendation": string }],
+  "performance": [{ "issue": string, "suggestion": string }],
+  "quality": [{ "issue": string, "improvement": string }],
+  "complexity": { "level": "Simple" or "Moderate" or "Complex", "score": number 1-10, "reasons": [string] },
+  "bestPractices": [{ "rule": string, "status": "pass" or "fail", "description": string }],
+  "refactoredCode": complete rewritten production-ready version of the code with ALL issues fixed,
+  "summary": 2-3 sentence honest assessment of the code quality
 }
 
-Also provide a refactoredCode field containing the complete rewritten version of the code with all bugs fixed, security issues resolved, and best practices applied. Keep the same language and functionality but improve the code quality.
-IMPORTANT: The refactoredCode field must contain genuinely improved code that would score higher than the original. Do not return code that is worse or similar quality to the original. The refactored code should fix ALL identified bugs, security issues, and quality problems.
-Also analyze the code complexity and return a complexity object with:
-- level: Simple (score 1-3), Moderate (score 4-6), or Complex (score 7-10)
-- score: complexity score from 1 to 10
-- reasons: array of 2-3 specific reasons explaining the complexity rating
-Consider: nesting depth, number of functions, loops, conditionals, and code length.
-Also check language-specific best practices and return a bestPractices array.
-For JavaScript/React check: proper variable naming (camelCase), no var usage,
-arrow functions, error handling, no console.logs in production code.
-For Python check: PEP8 naming conventions, docstrings present, no bare except,
-proper indentation, type hints.
-For Java check: class naming (PascalCase), method naming (camelCase),
-proper access modifiers, exception handling.
-For C++ check: memory management, header guards, naming conventions,
-avoid global variables.
-Return 5 best practice checks relevant to the detected language.
-Each with status pass or fail and a short description.
-
-If the code provided does not match the specified language, do not analyze it.
-Instead return this exact JSON:
-{
-  "overallScore": 0,
-  "bugs": [],
-  "security": [],
-  "performance": [],
-  "quality": [],
-  "refactoredCode": "",
-  "complexity": {
-    "level": "Simple",
-    "score": 1,
-    "reasons": []
-  },
-  "bestPractices": [],
-  "summary": "The code does not match the selected language. Please paste valid ${language} code and select the correct language."
-}
-
-Code to analyze:
+Code to analyze (${language}):
 ${code}`;
 }
 
