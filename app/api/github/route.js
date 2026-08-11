@@ -6,9 +6,7 @@ const githubHeaders = {
     : {}),
 };
 
-function isValidName(value) {
-  return typeof value === "string" && /^[a-zA-Z0-9_.-]+$/.test(value);
-}
+const allowedTypes = new Set(["tree", "content", "metadata"]);
 
 async function verifyFirebaseUser(request) {
   const [scheme, idToken] = (request.headers.get("authorization") ?? "").split(
@@ -38,43 +36,54 @@ async function verifyFirebaseUser(request) {
   }
 }
 
-export async function GET(request) {
+function isAllowedGitHubUrl(value, type) {
+  try {
+    const url = new URL(value);
+
+    if (url.protocol !== "https:" || url.hostname !== "api.github.com") {
+      return false;
+    }
+
+    const repositoryRoot = "[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+";
+    const patterns = {
+      tree: new RegExp(`^/repos/${repositoryRoot}/git/trees/HEAD$`),
+      content: new RegExp(`^/repos/${repositoryRoot}/contents/.+`),
+      metadata: new RegExp(`^/repos/${repositoryRoot}$`),
+    };
+
+    return patterns[type]?.test(url.pathname) ?? false;
+  } catch {
+    return false;
+  }
+}
+
+export async function POST(request) {
   const userId = await verifyFirebaseUser(request);
 
   if (!userId) {
     return Response.json({ error: "Authentication required." }, { status: 401 });
   }
 
-  const parameters = new URL(request.url).searchParams;
-  const action = parameters.get("action");
-  const username = parameters.get("username");
-  const reponame = parameters.get("reponame");
+  let body;
 
-  if (!isValidName(username) || !isValidName(reponame)) {
-    return Response.json({ error: "Invalid repository." }, { status: 400 });
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  let endpoint;
+  const { url, type } = body;
 
-  if (action === "tree") {
-    endpoint = `/repos/${encodeURIComponent(username)}/${encodeURIComponent(reponame)}/git/trees/HEAD?recursive=1`;
-  } else if (action === "metadata") {
-    endpoint = `/repos/${encodeURIComponent(username)}/${encodeURIComponent(reponame)}`;
-  } else if (action === "file") {
-    const filePath = parameters.get("filePath");
-
-    if (!filePath || filePath.includes("..") || filePath.length > 500) {
-      return Response.json({ error: "Invalid file path." }, { status: 400 });
-    }
-
-    const encodedPath = filePath.split("/").map(encodeURIComponent).join("/");
-    endpoint = `/repos/${encodeURIComponent(username)}/${encodeURIComponent(reponame)}/contents/${encodedPath}`;
-  } else {
-    return Response.json({ error: "Invalid action." }, { status: 400 });
+  if (
+    typeof url !== "string" ||
+    !allowedTypes.has(type) ||
+    !isAllowedGitHubUrl(url, type)
+  ) {
+    return Response.json({ error: "Invalid GitHub request." }, { status: 400 });
   }
 
   try {
-    const response = await fetch(`https://api.github.com${endpoint}`, {
+    const response = await fetch(url, {
       headers: githubHeaders,
       cache: "no-store",
       signal: AbortSignal.timeout(15_000),

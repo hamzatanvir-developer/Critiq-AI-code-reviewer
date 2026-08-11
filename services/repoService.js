@@ -22,7 +22,7 @@ function parseRepoUrl(repoUrl) {
   return { username, reponame };
 }
 
-async function fetchFromGitHubProxy(parameters) {
+async function fetchFromGitHubProxy(url, type) {
   const currentUser = auth.currentUser;
 
   if (!currentUser) {
@@ -30,12 +30,13 @@ async function fetchFromGitHubProxy(parameters) {
   }
 
   const idToken = await currentUser.getIdToken();
-  const searchParameters = new URLSearchParams(parameters);
-  const response = await fetch(`/api/github?${searchParameters}`, {
+  const response = await fetch("/api/github", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${idToken}`,
-      Accept: "application/json",
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({ url, type }),
     cache: "no-store",
   });
 
@@ -48,11 +49,8 @@ async function fetchFromGitHubProxy(parameters) {
 
 export async function fetchRepoTree(repoUrl) {
   const { username, reponame } = parseRepoUrl(repoUrl);
-  const data = await fetchFromGitHubProxy({
-    action: "tree",
-    username,
-    reponame,
-  });
+  const url = `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(reponame)}/git/trees/HEAD?recursive=1`;
+  const data = await fetchFromGitHubProxy(url, "tree");
 
   return (data.tree ?? [])
     .filter((entry) => entry.type === "blob" && typeof entry.path === "string")
@@ -140,12 +138,9 @@ export function filterImportantFiles(tree) {
 
 export async function fetchFileContent(username, reponame, filePath) {
   try {
-    const data = await fetchFromGitHubProxy({
-      action: "file",
-      username,
-      reponame,
-      filePath,
-    });
+    const encodedPath = filePath.split("/").map(encodeURIComponent).join("/");
+    const url = `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(reponame)}/contents/${encodedPath}`;
+    const data = await fetchFromGitHubProxy(url, "content");
 
     if (data.type !== "file" || typeof data.content !== "string") return null;
 
@@ -163,11 +158,8 @@ export async function fetchFileContent(username, reponame, filePath) {
 }
 
 export async function fetchRepoMetadata(username, reponame) {
-  const data = await fetchFromGitHubProxy({
-    action: "metadata",
-    username,
-    reponame,
-  });
+  const url = `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(reponame)}`;
+  const data = await fetchFromGitHubProxy(url, "metadata");
 
   return {
     name: data.name,
