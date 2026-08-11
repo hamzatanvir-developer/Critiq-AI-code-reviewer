@@ -306,7 +306,16 @@ export async function POST(request) {
           break;
         }
 
-        return Response.json(normalizeResult(JSON.parse(text), code));
+        const cleanText = text
+          .replace(/[\x00-\x1F\x7F]/g, " ")
+          .replace(/\n/g, "\\n")
+          .replace(/\r/g, "\\r")
+          .replace(/\t/g, "\\t")
+          .trim();
+        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+        const jsonString = jsonMatch ? jsonMatch[0] : cleanText;
+
+        return Response.json(normalizeResult(JSON.parse(jsonString), code));
       } catch (error) {
         console.error(`Groq ${model} request failed:`, error);
         break;
