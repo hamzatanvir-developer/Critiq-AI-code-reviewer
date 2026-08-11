@@ -40,6 +40,7 @@ export default function ReviewCard({
 }) {
   const [activeTab, setActiveTab] = useState("Bugs");
   const [copied, setCopied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const scoreColor =
     result.overallScore < 50
@@ -103,10 +104,6 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
     await navigator.clipboard.writeText(formatReport());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }
-
-  function copyCode() {
-    return navigator.clipboard.writeText(result.refactoredCode ?? "");
   }
 
   function renderBestPractice(item, index) {
@@ -309,10 +306,14 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
               </div>
               <button
                 type="button"
-                onClick={copyCode}
-                className="rounded-lg border border-[#3a3a3a] bg-[#111111] px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-[#f5f5f5] hover:text-white"
+                onClick={() => {
+                  navigator.clipboard.writeText(result.refactoredCode);
+                  setCodeCopied(true);
+                  setTimeout(() => setCodeCopied(false), 1500);
+                }}
+                className="rounded-lg border border-[#2a2a2a] px-3 py-1.5 text-xs text-[#a0a0a0] transition-all hover:text-[#f5f5f5]"
               >
-                Copy Code
+                {codeCopied ? "✓ Copied" : "Copy Code"}
               </button>
             </div>
 

@@ -182,6 +182,7 @@ function buildPrompt(code, language) {
 }
 
 Also provide a refactoredCode field containing the complete rewritten version of the code with all bugs fixed, security issues resolved, and best practices applied. Keep the same language and functionality but improve the code quality.
+IMPORTANT: The refactoredCode field must contain genuinely improved code that would score higher than the original. Do not return code that is worse or similar quality to the original. The refactored code should fix ALL identified bugs, security issues, and quality problems.
 Also analyze the code complexity and return a complexity object with:
 - level: Simple (score 1-3), Moderate (score 4-6), or Complex (score 7-10)
 - score: complexity score from 1 to 10
