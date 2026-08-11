@@ -1,4 +1,4 @@
-const models = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"];
+const models = ["llama-3.3-70b-versatile"];
 const maxRetries = 3;
 const retryDelay = 3000;
 const allowedLanguages = new Set(["JavaScript", "Python", "Java", "C++", "React"]);
@@ -6,7 +6,7 @@ const maxCodeLength = 50000;
 const rateLimitWindow = 60_000;
 const maxUserRequestsPerWindow = 6;
 const maxIpRequestsPerWindow = 20;
-const maxGeminiResponseLength = 250000;
+const maxGroqResponseLength = 250000;
 const requestLog = new Map();
 
 const rateLimitMock = {
@@ -249,11 +249,11 @@ export async function POST(request) {
     );
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
 
   if (!apiKey) {
     return Response.json(
-      { error: "Gemini API key is not configured." },
+      { error: "Groq API key is not configured." },
       { status: 500 },
     );
   }
@@ -288,19 +288,18 @@ export async function POST(request) {
     for (let retry = 0; retry <= maxRetries; retry += 1) {
       try {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+          "https://api.groq.com/openai/v1/chat/completions",
           {
             method: "POST",
             headers: {
+              Authorization: `Bearer ${apiKey}`,
               "Content-Type": "application/json",
-              "x-goog-api-key": apiKey,
             },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: {
-                responseMimeType: "application/json",
-                maxOutputTokens: 8192,
-              },
+              model,
+              messages: [{ role: "user", content: prompt }],
+              temperature: 0.1,
+              max_tokens: 2000,
             }),
             cache: "no-store",
             signal: AbortSignal.timeout(45_000),
@@ -320,26 +319,26 @@ export async function POST(request) {
 
         if (!response.ok) {
           const errorBody = await response.text();
-          console.error(`Gemini ${model} request failed (${response.status}):`, errorBody);
+          console.error(`Groq ${model} request failed (${response.status}):`, errorBody);
           break;
         }
 
         const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const text = data.choices?.[0]?.message?.content;
 
         if (!text) {
-          console.error(`Gemini ${model} returned no response text.`);
+          console.error(`Groq ${model} returned no response text.`);
           break;
         }
 
-        if (text.length > maxGeminiResponseLength) {
-          console.error(`Gemini ${model} returned an oversized response.`);
+        if (text.length > maxGroqResponseLength) {
+          console.error(`Groq ${model} returned an oversized response.`);
           break;
         }
 
         return Response.json(normalizeResult(JSON.parse(text), code));
       } catch (error) {
-        console.error(`Gemini ${model} request failed:`, error);
+        console.error(`Groq ${model} request failed:`, error);
         break;
       }
     }
@@ -350,7 +349,7 @@ export async function POST(request) {
   }
 
   return Response.json(
-    { error: "Gemini could not analyze the code." },
+    { error: "Groq could not analyze the code." },
     { status: 502 },
   );
 }
