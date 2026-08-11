@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 
 import CodeEditor from "@/components/CodeEditor";
+import RepoAnalyzer from "@/components/RepoAnalyzer";
 import ReviewCard from "@/components/ReviewCard";
 import { AuthContext } from "@/context/AuthContext";
 import { analyzeCode } from "@/lib/gemini";
@@ -20,6 +21,7 @@ export default function HomePage() {
   const [error, setError] = useState(null);
   const [analyzedCode, setAnalyzedCode] = useState("");
   const [analyzedLanguage, setAnalyzedLanguage] = useState("");
+  const [activeTab, setActiveTab] = useState("code");
 
   useEffect(() => {
     if (authLoading || !user) {
@@ -251,31 +253,60 @@ export default function HomePage() {
   return (
     <main className="min-h-[calc(100dvh-6rem)] bg-[#111111] px-3 py-8 text-white sm:min-h-[calc(100dvh-8rem)] sm:px-6 sm:py-12">
       <div className="mx-auto w-full max-w-5xl pb-12 pt-16 sm:pt-28">
-        <div className={result ? "space-y-8" : "flex min-h-[calc(100vh-6rem)] items-center justify-center"}>
-          <div className={result ? "w-full space-y-8" : "w-full"}>
-            <CodeEditor onAnalyze={handleAnalyze} loading={loading} />
-
-            {error && (
-              <p
-                role="alert"
-                className="rounded-lg border border-red-900/60 bg-red-950/40 px-4 py-3 text-center text-sm text-red-400"
-              >
-                {error}
-              </p>
-            )}
-
-            {result && (
-              <div id="review-section">
-                <ReviewCard
-                  result={result}
-                  onSave={handleSave}
-                  isSaving={isSaving}
-                  saveStatus={saveStatus}
-                />
-              </div>
-            )}
-          </div>
+        <div className="mx-auto mb-8 flex w-fit max-w-full gap-1 rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] p-1">
+          <button
+            type="button"
+            onClick={() => setActiveTab("code")}
+            className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:px-6 ${
+              activeTab === "code"
+                ? "bg-[#f5f5f5] text-[#111111]"
+                : "text-[#a0a0a0] hover:text-[#f5f5f5]"
+            }`}
+          >
+            Code Review
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("repo")}
+            className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:px-6 ${
+              activeTab === "repo"
+                ? "bg-[#f5f5f5] text-[#111111]"
+                : "text-[#a0a0a0] hover:text-[#f5f5f5]"
+            }`}
+          >
+            Repo Analyzer
+          </button>
         </div>
+
+        {activeTab === "code" ? (
+          <div className={result ? "space-y-8" : "flex min-h-[calc(100vh-6rem)] items-center justify-center"}>
+            <div className={result ? "w-full space-y-8" : "w-full"}>
+              <CodeEditor onAnalyze={handleAnalyze} loading={loading} />
+
+              {error && (
+                <p
+                  role="alert"
+                  className="rounded-lg border border-red-900/60 bg-red-950/40 px-4 py-3 text-center text-sm text-red-400"
+                >
+                  {error}
+                </p>
+              )}
+
+              {result && (
+                <div id="review-section">
+                  <ReviewCard
+                    result={result}
+                    onSave={handleSave}
+                    isSaving={isSaving}
+                    saveStatus={saveStatus}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <RepoAnalyzer />
+        )}
       </div>
     </main>
   );
