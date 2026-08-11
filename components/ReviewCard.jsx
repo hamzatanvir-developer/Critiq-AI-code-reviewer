@@ -317,9 +317,9 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
               </button>
             </div>
 
-            {result.refactoredCode && result.refactoredCode.trim().length > 0 ? (
+            {result.refactoredCode && String(result.refactoredCode).trim().length > 0 ? (
               <pre className="max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded-xl bg-[#111111] p-3 font-mono text-xs text-green-400 sm:p-6 sm:text-sm">
-                <code>{result.refactoredCode}</code>
+                <code>{String(result.refactoredCode)}</code>
               </pre>
             ) : (
               <p className="py-10 text-center text-zinc-500">

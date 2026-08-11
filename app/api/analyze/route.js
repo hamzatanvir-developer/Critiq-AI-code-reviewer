@@ -63,6 +63,14 @@ function normalizeResult(result, code) {
     suppliedScore >= 1 &&
     suppliedScore <= 10;
 
+  if (result.refactoredCode && typeof result.refactoredCode !== "string") {
+    result.refactoredCode = JSON.stringify(result.refactoredCode);
+  }
+
+  if (!result.refactoredCode) {
+    result.refactoredCode = "";
+  }
+
   return {
     ...result,
     complexity: hasValidComplexity
