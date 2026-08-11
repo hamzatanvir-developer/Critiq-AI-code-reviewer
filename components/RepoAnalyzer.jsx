@@ -3,7 +3,7 @@
 import { useContext, useState } from "react";
 
 import { AuthContext } from "@/context/AuthContext";
-import { analyzeRepo } from "@/lib/geminiRepo";
+import { analyzeRepoWithGroq } from "@/lib/groqRepo";
 import {
   fetchFileContent,
   fetchRepoMetadata,
@@ -127,7 +127,7 @@ export default function RepoAnalyzer() {
 
       setFilesAnalyzed(readableFiles.length);
       setProgress(`Analyzing ${readableFiles.length} files with AI...`);
-      const data = await analyzeRepo(readableFiles, repoDetails);
+      const data = await analyzeRepoWithGroq(readableFiles, repoDetails);
 
       if (!data) {
         throw new Error("The AI could not analyze this repository. Try again shortly.");

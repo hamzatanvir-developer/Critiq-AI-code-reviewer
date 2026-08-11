@@ -1,4 +1,4 @@
-import { analyzeRepoWithGemini } from "@/lib/geminiRepoServer";
+import { analyzeRepoWithGroqServer } from "@/lib/groqRepoServer";
 
 const maxFiles = 20;
 const maxFileLength = 3000;
@@ -102,7 +102,7 @@ export async function POST(request) {
     return Response.json({ error: "Invalid repository data." }, { status: 400 });
   }
 
-  const result = await analyzeRepoWithGemini(body.files, body.repoMetadata);
+  const result = await analyzeRepoWithGroqServer(body.files, body.repoMetadata);
 
   if (!result) {
     return Response.json(
