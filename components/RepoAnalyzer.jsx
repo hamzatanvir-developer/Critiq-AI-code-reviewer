@@ -115,7 +115,7 @@ export default function RepoAnalyzer() {
         if (content !== null) {
           readableFiles.push({
             path: filePath,
-            content: content.slice(0, 30_000),
+            content,
             language: getFileLanguage(filePath),
           });
         }
@@ -186,7 +186,7 @@ export default function RepoAnalyzer() {
           </button>
         </div>
         <p className="mt-2 text-xs text-[#606060]">
-          Works with any public GitHub repository. Max 15 files analyzed.
+          Works with any public GitHub repository. Max 20 files analyzed.
         </p>
       </form>
 
@@ -414,4 +414,3 @@ export default function RepoAnalyzer() {
     </section>
   );
 }
-

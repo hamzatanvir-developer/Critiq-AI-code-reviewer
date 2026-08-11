@@ -1,7 +1,7 @@
 import { analyzeRepoWithGemini } from "@/lib/geminiRepoServer";
 
-const maxFiles = 15;
-const maxFileLength = 30_000;
+const maxFiles = 20;
+const maxFileLength = 3000;
 const maxTotalLength = 250_000;
 
 function isTrustedRequest(request) {
