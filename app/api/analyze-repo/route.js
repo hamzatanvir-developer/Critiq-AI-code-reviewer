@@ -1,7 +1,7 @@
 import { analyzeRepoWithGroqServer } from "@/lib/groqRepoServer";
 
-const maxFiles = 20;
-const maxFileLength = 3000;
+const maxFiles = 10;
+const maxFileLength = 500;
 const maxTotalLength = 250_000;
 
 function isTrustedRequest(request) {
@@ -98,11 +98,24 @@ export async function POST(request) {
     return Response.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  if (!isValidPayload(body.files, body.repoMetadata)) {
+  const limitedFiles = Array.isArray(body.files)
+    ? body.files.slice(0, maxFiles).map((file) => ({
+        ...file,
+        content:
+          typeof file?.content === "string"
+            ? file.content.slice(0, maxFileLength)
+            : file?.content,
+      }))
+    : body.files;
+
+  if (!isValidPayload(limitedFiles, body.repoMetadata)) {
     return Response.json({ error: "Invalid repository data." }, { status: 400 });
   }
 
-  const result = await analyzeRepoWithGroqServer(body.files, body.repoMetadata);
+  const result = await analyzeRepoWithGroqServer(
+    limitedFiles,
+    body.repoMetadata,
+  );
 
   if (!result) {
     return Response.json(

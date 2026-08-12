@@ -22,6 +22,7 @@ export default function HomePage() {
   const [analyzedCode, setAnalyzedCode] = useState("");
   const [analyzedLanguage, setAnalyzedLanguage] = useState("");
   const [activeTab, setActiveTab] = useState("code");
+  const [lastAnalysis, setLastAnalysis] = useState(null);
 
   useEffect(() => {
     if (authLoading || !user) {
@@ -43,6 +44,15 @@ export default function HomePage() {
 
       const parsedReview = JSON.parse(savedReview);
       setResult(parsedReview.result ?? null);
+      setLastAnalysis(
+        parsedReview.result
+          ? {
+              ...parsedReview.result,
+              code: parsedReview.code ?? "",
+              language: parsedReview.language ?? "",
+            }
+          : null,
+      );
       setAnalyzedCode(parsedReview.code ?? "");
       setAnalyzedLanguage(parsedReview.language ?? "");
       setReviewSaved(Boolean(parsedReview.saved));
@@ -60,7 +70,16 @@ export default function HomePage() {
     setReviewSaved(false);
 
     try {
-      const analysis = await analyzeCode(code, language);
+      const isAnalyzingRefactored =
+        lastAnalysis &&
+        lastAnalysis.refactoredCode &&
+        code.trim() === String(lastAnalysis.refactoredCode).trim();
+      const requestBody = {
+        code,
+        language,
+        ...(isAnalyzingRefactored && { originalAnalysis: lastAnalysis }),
+      };
+      const analysis = await analyzeCode(requestBody);
 
       if (!analysis) {
         setError("Unable to analyze the code. Please try again.");
@@ -70,6 +89,7 @@ export default function HomePage() {
       setAnalyzedCode(code);
       setAnalyzedLanguage(language);
       setResult(analysis);
+      setLastAnalysis({ ...analysis, code, language });
 
       if (user) {
         try {

@@ -83,11 +83,26 @@ export async function POST(request) {
   }
 
   try {
+    console.log("GitHub token exists:", !!process.env.GITHUB_TOKEN);
+
     const response = await fetch(url, {
       headers: githubHeaders,
       cache: "no-store",
       signal: AbortSignal.timeout(15_000),
     });
+
+    console.log("GitHub response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log("GitHub error:", errorText);
+
+      return new Response(errorText, {
+        status: response.status,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const data = await response.json();
 
     return Response.json(data, { status: response.status });

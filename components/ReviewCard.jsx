@@ -175,6 +175,21 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
 
   return (
     <section className="mx-auto w-full max-w-4xl animate-fade-in overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-4 text-white shadow-[0_0_40px_rgba(0,0,0,0.15)] sm:p-8">
+      {result.isRefactoredAnalysis && (
+        <div className="mb-6 flex items-center gap-3 rounded-xl border border-green-400/20 bg-green-400/5 p-4">
+          <span className="text-2xl">✓</span>
+          <div>
+            <p className="text-sm font-semibold text-green-400">
+              Refactored Code Analysis
+            </p>
+            <p className="text-xs text-[#a0a0a0]">
+              Score improved from {result.originalScore}/100 to{" "}
+              {result.overallScore}/100 (+{result.improvement} points)
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col items-center text-center">
         <div
           className={`mx-auto mb-6 flex h-28 w-28 flex-col items-center justify-center rounded-full border-4 glow-pulse sm:h-32 sm:w-32 ${scoreColor}`}

@@ -1,4 +1,4 @@
-const models = ["gemini-2.0-flash"];
+const models = ["llama-3.3-70b-versatile"];
 const maxRetries = 3;
 const retryDelay = 3000;
 const allowedLanguages = new Set(["JavaScript", "Python", "Java", "C++", "React"]);
@@ -165,7 +165,51 @@ function isTrustedBrowserRequest(request) {
   }
 }
 
-function buildPrompt(code, language) {
+function buildPrompt(code, language, originalAnalysis) {
+  if (originalAnalysis) {
+    return `You are a senior code reviewer doing a comparative analysis.
+
+ORIGINAL CODE ANALYSIS:
+- Original Score: ${originalAnalysis.overallScore}/100
+- Bugs found: ${originalAnalysis.bugs?.length || 0}
+- Security issues: ${originalAnalysis.security?.length || 0}
+- Performance issues: ${originalAnalysis.performance?.length || 0}
+- Quality issues: ${originalAnalysis.quality?.length || 0}
+- Summary: ${originalAnalysis.summary}
+
+Now analyze this REFACTORED version of that code.
+The refactored code claims to fix all the above issues.
+
+IMPORTANT SCORING RULES:
+- If refactored code fixes all bugs: score MUST be higher than ${originalAnalysis.overallScore}
+- If refactored code fixes most issues: score MUST be at least ${Math.min(95, originalAnalysis.overallScore + 10)}
+- Score relative to the original, not in isolation
+- Acknowledge improvements made from the original
+
+Return ONLY this JSON:
+{
+  "overallScore": number (MUST be higher than ${originalAnalysis.overallScore} if issues are fixed),
+  "bugs": [],
+  "security": [],
+  "performance": [],
+  "quality": [],
+  "complexity": {},
+  "bestPractices": [],
+  "summary": string (mention improvements from original),
+  "isRefactoredAnalysis": true,
+  "originalScore": ${originalAnalysis.overallScore},
+  "improvement": number (difference from original score)
+}
+
+After the JSON write:
+REFACTORED_CODE_START
+${code}
+REFACTORED_CODE_END
+
+Refactored code to analyze (${language}):
+${code}`;
+  }
+
   return `Analyze this ${language} code. Return ONLY this JSON with no refactoredCode field:
 {
   "overallScore": number,
@@ -183,7 +227,20 @@ REFACTORED_CODE_START
 then the complete refactored code
 then REFACTORED_CODE_END
 
-The refactored code must fix every identified bug and security issue, apply every performance and quality improvement, follow ${language} best practices, add missing error handling and input validation, improve naming and complex-logic comments, and be genuinely production-ready.
+The refactored code MUST:
+- Fix every single bug listed above
+- Resolve every security vulnerability
+- Apply every performance improvement
+- Follow all ${language} best practices strictly
+- Add comprehensive error handling with try/catch everywhere
+- Add input validation for all parameters
+- Use clear descriptive variable and function names
+- Add JSDoc or inline comments for complex logic
+- Be completely production-ready code that would pass a senior engineer review
+- Score at minimum 90/100 if analyzed again
+- Be significantly better than the original in every measurable way
+- Never introduce new bugs or issues
+- Keep the same functionality but improve everything else
 
 Code to analyze:
 ${code}`;
@@ -217,11 +274,11 @@ export async function POST(request) {
     );
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
 
   if (!apiKey) {
     return Response.json(
-      { error: "Gemini API key is not configured." },
+      { error: "Groq API key is not configured." },
       { status: 500 },
     );
   }
@@ -234,7 +291,7 @@ export async function POST(request) {
     return Response.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { code, language } = body;
+  const { code, language, originalAnalysis } = body;
 
   if (
     typeof code !== "string" ||
@@ -249,21 +306,25 @@ export async function POST(request) {
     );
   }
 
-  const prompt = buildPrompt(code, language);
+  const prompt = buildPrompt(code, language, originalAnalysis);
   let rateLimitReached = false;
 
   for (const model of models) {
     for (let retry = 0; retry <= maxRetries; retry += 1) {
       try {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+          "https://api.groq.com/openai/v1/chat/completions",
           {
             method: "POST",
             headers: {
+              Authorization: `Bearer ${apiKey}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
+              model,
+              messages: [{ role: "user", content: prompt }],
+              temperature: 0.1,
+              max_tokens: 4000,
             }),
             cache: "no-store",
             signal: AbortSignal.timeout(45_000),
@@ -288,7 +349,7 @@ export async function POST(request) {
         }
 
         const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const text = data.choices?.[0]?.message?.content;
 
         if (!text) {
           console.error(`Gemini ${model} returned no response text.`);
@@ -344,7 +405,7 @@ export async function POST(request) {
   }
 
   return Response.json(
-    { error: "Gemini could not analyze the code." },
+    { error: "Groq could not analyze the code." },
     { status: 502 },
   );
 }
