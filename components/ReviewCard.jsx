@@ -297,6 +297,13 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
         </div>
       </div>
 
+      {result.isRefactoredAnalysis && (
+        <p className="mb-4 text-xs italic text-[#606060]">
+          * Remaining issues are new observations on the refactored code. The
+          original issues have been resolved.
+        </p>
+      )}
+
       <div className="space-y-3" role="tabpanel">
         {activeTab === "Best Practices" ? (
           bestPractices.length > 0 ? (
