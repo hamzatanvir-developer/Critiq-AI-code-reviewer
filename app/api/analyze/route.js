@@ -4,36 +4,10 @@ const retryDelay = 3000;
 const allowedLanguages = new Set(["JavaScript", "Python", "Java", "C++", "React"]);
 const maxCodeLength = 50000;
 const rateLimitWindow = 60_000;
-const maxUserRequestsPerWindow = 6;
-const maxIpRequestsPerWindow = 20;
+const maxUserRequestsPerWindow = 20;
+const maxIpRequestsPerWindow = 50;
 const maxGeminiResponseLength = 250000;
 const requestLog = new Map();
-
-const rateLimitMock = {
-  overallScore: 72,
-  bugs: [
-    {
-      line: "N/A",
-      issue: "Could not analyze - API limit reached",
-      severity: "low",
-    },
-  ],
-  security: [],
-  performance: [],
-  quality: [
-    {
-      issue: "API rate limit reached",
-      improvement: "Try again in a moment",
-    },
-  ],
-  complexity: {
-    level: "Unavailable",
-    score: 0,
-    reasons: ["Complexity could not be calculated while the API limit is active."],
-  },
-  summary:
-    "API rate limit reached. This is a mock response for testing. Please try again in a few seconds.",
-};
 
 function estimateComplexity(code) {
   const lines = code.split("\n").filter((line) => line.trim()).length;
@@ -201,10 +175,13 @@ Return ONLY this JSON:
   "improvement": number (difference from original score)
 }
 
-After the JSON write:
+After the closing } of the JSON, on a new line write exactly:
 REFACTORED_CODE_START
-${code}
+Then write the complete refactored ${language} code.
+Then write exactly:
 REFACTORED_CODE_END
+
+Do not truncate the refactored code. Write the complete version.
 
 Refactored code to analyze (${language}):
 ${code}`;
@@ -222,10 +199,13 @@ ${code}`;
   "summary": string
 }
 
-After the JSON on a new line write:
+After the closing } of the JSON, on a new line write exactly:
 REFACTORED_CODE_START
-then the complete refactored code
-then REFACTORED_CODE_END
+Then write the complete refactored ${language} code.
+Then write exactly:
+REFACTORED_CODE_END
+
+Do not truncate the refactored code. Write the complete version.
 
 The refactored code MUST:
 - Fix every single bug listed above
@@ -324,7 +304,7 @@ export async function POST(request) {
               model,
               messages: [{ role: "user", content: prompt }],
               temperature: 0.1,
-              max_tokens: 4000,
+              max_tokens: 6000,
             }),
             cache: "no-store",
             signal: AbortSignal.timeout(60_000),
@@ -401,11 +381,14 @@ export async function POST(request) {
   }
 
   if (rateLimitReached) {
-    return Response.json(rateLimitMock);
+    return Response.json(
+      { error: "Rate limit reached. Please wait a minute." },
+      { status: 429 },
+    );
   }
 
   return Response.json(
-    { error: "Groq could not analyze the code." },
+    { error: "Could not analyze the code." },
     { status: 502 },
   );
 }
