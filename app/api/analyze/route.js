@@ -1,4 +1,4 @@
-const models = ["llama-3.3-70b-versatile"];
+const models = ["gemini-2.0-flash"];
 const maxRetries = 3;
 const retryDelay = 3000;
 const allowedLanguages = new Set(["JavaScript", "Python", "Java", "C++", "React"]);
@@ -6,7 +6,7 @@ const maxCodeLength = 50000;
 const rateLimitWindow = 60_000;
 const maxUserRequestsPerWindow = 6;
 const maxIpRequestsPerWindow = 20;
-const maxGroqResponseLength = 250000;
+const maxGeminiResponseLength = 250000;
 const requestLog = new Map();
 
 const rateLimitMock = {
@@ -166,36 +166,26 @@ function isTrustedBrowserRequest(request) {
 }
 
 function buildPrompt(code, language) {
-  return `You are a senior software engineer with 10+ years of experience.
-Analyze this ${language} code and return ONLY valid JSON with no markdown, no backticks.
-
-For the refactoredCode field you MUST:
-- Fix every single bug found
-- Fix every security vulnerability
-- Apply every performance improvement
-- Follow all best practices for ${language}
-- Add proper error handling everywhere it is missing
-- Add input validation
-- Improve variable and function naming
-- Add comments for complex logic
-- Make it genuinely production-ready code
-- The refactored code must be significantly better than the original
-- Do not just rename variables, actually rewrite and improve the logic
-
-Return this exact JSON structure:
+  return `Analyze this ${language} code. Return ONLY this JSON with no refactoredCode field:
 {
-  "overallScore": number out of 100,
+  "overallScore": number,
   "bugs": [{ "line": string, "issue": string, "severity": "high" or "medium" or "low" }],
   "security": [{ "issue": string, "recommendation": string }],
   "performance": [{ "issue": string, "suggestion": string }],
   "quality": [{ "issue": string, "improvement": string }],
   "complexity": { "level": "Simple" or "Moderate" or "Complex", "score": number 1-10, "reasons": [string] },
   "bestPractices": [{ "rule": string, "status": "pass" or "fail", "description": string }],
-  "refactoredCode": complete rewritten production-ready version of the code with ALL issues fixed,
-  "summary": 2-3 sentence honest assessment of the code quality
+  "summary": string
 }
 
-Code to analyze (${language}):
+After the JSON on a new line write:
+REFACTORED_CODE_START
+then the complete refactored code
+then REFACTORED_CODE_END
+
+The refactored code must fix every identified bug and security issue, apply every performance and quality improvement, follow ${language} best practices, add missing error handling and input validation, improve naming and complex-logic comments, and be genuinely production-ready.
+
+Code to analyze:
 ${code}`;
 }
 
@@ -227,11 +217,11 @@ export async function POST(request) {
     );
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     return Response.json(
-      { error: "Groq API key is not configured." },
+      { error: "Gemini API key is not configured." },
       { status: 500 },
     );
   }
@@ -266,18 +256,14 @@ export async function POST(request) {
     for (let retry = 0; retry <= maxRetries; retry += 1) {
       try {
         const response = await fetch(
-          "https://api.groq.com/openai/v1/chat/completions",
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${apiKey}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model,
-              messages: [{ role: "user", content: prompt }],
-              temperature: 0.1,
-              max_tokens: 2000,
+              contents: [{ parts: [{ text: prompt }] }],
             }),
             cache: "no-store",
             signal: AbortSignal.timeout(45_000),
@@ -297,35 +283,57 @@ export async function POST(request) {
 
         if (!response.ok) {
           const errorBody = await response.text();
-          console.error(`Groq ${model} request failed (${response.status}):`, errorBody);
+          console.error(`Gemini ${model} request failed (${response.status}):`, errorBody);
           break;
         }
 
         const data = await response.json();
-        const text = data.choices?.[0]?.message?.content;
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!text) {
-          console.error(`Groq ${model} returned no response text.`);
+          console.error(`Gemini ${model} returned no response text.`);
           break;
         }
 
-        if (text.length > maxGroqResponseLength) {
-          console.error(`Groq ${model} returned an oversized response.`);
+        if (text.length > maxGeminiResponseLength) {
+          console.error(`Gemini ${model} returned an oversized response.`);
           break;
         }
 
-        const cleanText = text
-          .replace(/[\x00-\x1F\x7F]/g, " ")
-          .replace(/\n/g, "\\n")
-          .replace(/\r/g, "\\r")
-          .replace(/\t/g, "\\t")
-          .trim();
-        const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
-        const jsonString = jsonMatch ? jsonMatch[0] : cleanText;
+        const refactoredStartMarker = "REFACTORED_CODE_START";
+        const refactoredEndMarker = "REFACTORED_CODE_END";
+        const refactoredStart = text.indexOf(refactoredStartMarker);
+        const analysisText =
+          refactoredStart === -1 ? text : text.slice(0, refactoredStart);
+        const firstBrace = analysisText.indexOf("{");
+        const lastBrace = analysisText.lastIndexOf("}");
 
-        return Response.json(normalizeResult(JSON.parse(jsonString), code));
+        if (firstBrace === -1 || lastBrace === -1) {
+          throw new Error("No JSON found");
+        }
+
+        const jsonString = analysisText.slice(firstBrace, lastBrace + 1);
+        const parsedResult = JSON.parse(jsonString);
+        const refactoredEnd =
+          refactoredStart === -1
+            ? -1
+            : text.indexOf(
+                refactoredEndMarker,
+                refactoredStart + refactoredStartMarker.length,
+              );
+        parsedResult.refactoredCode =
+          refactoredStart === -1
+            ? ""
+            : text
+                .slice(
+                  refactoredStart + refactoredStartMarker.length,
+                  refactoredEnd === -1 ? text.length : refactoredEnd,
+                )
+                .trim();
+
+        return Response.json(normalizeResult(parsedResult, code));
       } catch (error) {
-        console.error(`Groq ${model} request failed:`, error);
+        console.error(`Gemini ${model} request failed:`, error);
         break;
       }
     }
@@ -336,7 +344,7 @@ export async function POST(request) {
   }
 
   return Response.json(
-    { error: "Groq could not analyze the code." },
+    { error: "Gemini could not analyze the code." },
     { status: 502 },
   );
 }
