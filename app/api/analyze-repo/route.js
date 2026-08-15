@@ -127,6 +127,10 @@ Best practices failed: ${report.summary.failedBestPractices}`;
 }
 
 export async function POST(request) {
+  console.log("Analyze repo route hit");
+  console.log("GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
+  console.log("GITHUB_TOKEN exists:", !!process.env.GITHUB_TOKEN);
+
   if (!isTrustedRequest(request)) {
     return Response.json({ error: "Request rejected." }, { status: 403 });
   }
@@ -157,9 +161,12 @@ export async function POST(request) {
     return Response.json({ error: "Invalid repository data." }, { status: 400 });
   }
 
+  console.log("Files fetched:", limitedFiles.length);
+
   let report;
   try {
     report = analyzeRepo(limitedFiles);
+    console.log("Static analysis done, score:", report.overallScore);
   } catch (error) {
     console.error("Static repository analysis failed:", error);
     return Response.json(
