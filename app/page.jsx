@@ -7,7 +7,6 @@ import CodeEditor from "@/components/CodeEditor";
 import RepoAnalyzer from "@/components/RepoAnalyzer";
 import ReviewCard from "@/components/ReviewCard";
 import { AuthContext } from "@/context/AuthContext";
-import { analyzeCode } from "@/lib/gemini";
 import { saveReview } from "@/services/historyService";
 
 export default function HomePage() {
