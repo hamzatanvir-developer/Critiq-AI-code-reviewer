@@ -1,7 +1,7 @@
-import { analyzeRepoWithGroqServer } from "@/lib/groqRepoServer";
+import analyzeRepo from "@/lib/analyzers/repoAnalyzer";
 
-const maxFiles = 10;
-const maxFileLength = 500;
+const maxFiles = 20;
+const maxFileLength = 3000;
 const maxTotalLength = 250_000;
 
 function isTrustedRequest(request) {
@@ -24,9 +24,7 @@ async function verifyFirebaseUser(request) {
   );
   const firebaseApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
 
-  if (scheme !== "Bearer" || !idToken || !firebaseApiKey) {
-    return null;
-  }
+  if (scheme !== "Bearer" || !idToken || !firebaseApiKey) return null;
 
   try {
     const response = await fetch(
@@ -40,10 +38,7 @@ async function verifyFirebaseUser(request) {
       },
     );
 
-    if (!response.ok) {
-      return null;
-    }
-
+    if (!response.ok) return null;
     const data = await response.json();
     return data.users?.[0]?.localId ?? null;
   } catch {
@@ -62,7 +57,6 @@ function isValidPayload(files, repoMetadata) {
   }
 
   let totalLength = 0;
-
   for (const file of files) {
     if (
       typeof file?.path !== "string" ||
@@ -72,11 +66,64 @@ function isValidPayload(files, repoMetadata) {
     ) {
       return false;
     }
-
     totalLength += file.content.length;
   }
 
   return totalLength <= maxTotalLength;
+}
+
+function fallbackProjectSummary(report, repoMetadata) {
+  return `${repoMetadata.name} received an overall code-health score of ${report.overallScore}/100 (${report.grade}). Static analysis found ${report.summary.criticalIssues} critical issues across ${report.summary.totalFiles} files. Prioritize the highest-severity security and correctness findings before addressing maintainability improvements.`;
+}
+
+async function generateProjectSummary(report, repoMetadata) {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error("Groq API key is not configured.");
+
+  const prompt = `You are a senior engineering lead writing an executive repository assessment.
+Write exactly three concise professional sentences. Do not use markdown, headings, bullets, or scores not supplied below.
+
+Repository: ${repoMetadata.name}
+Description: ${repoMetadata.description || "No description provided"}
+Primary language: ${repoMetadata.language || "Unknown"}
+Overall score: ${report.overallScore}/100 (${report.grade})
+Files analyzed: ${report.summary.totalFiles}
+Bugs: ${report.summary.totalBugs}
+Security issues: ${report.summary.totalSecurityIssues}
+Performance issues: ${report.summary.totalPerformanceIssues}
+Quality issues: ${report.summary.totalQualityIssues}
+Critical issues: ${report.summary.criticalIssues}
+Best practices passed: ${report.summary.passedBestPractices}
+Best practices failed: ${report.summary.failedBestPractices}`;
+
+  const response = await fetch(
+    "https://api.groq.com/openai/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.1,
+        max_tokens: 250,
+      }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(30_000),
+    },
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Groq summary failed (${response.status}): ${errorBody}`);
+  }
+
+  const data = await response.json();
+  const summary = data.choices?.[0]?.message?.content?.trim();
+  if (!summary) throw new Error("Groq returned an empty project summary.");
+  return summary;
 }
 
 export async function POST(request) {
@@ -85,13 +132,11 @@ export async function POST(request) {
   }
 
   const userId = await verifyFirebaseUser(request);
-
   if (!userId) {
     return Response.json({ error: "Authentication required." }, { status: 401 });
   }
 
   let body;
-
   try {
     body = await request.json();
   } catch {
@@ -112,17 +157,27 @@ export async function POST(request) {
     return Response.json({ error: "Invalid repository data." }, { status: 400 });
   }
 
-  const result = await analyzeRepoWithGroqServer(
-    limitedFiles,
-    body.repoMetadata,
-  );
-
-  if (!result) {
+  let report;
+  try {
+    report = analyzeRepo(limitedFiles);
+  } catch (error) {
+    console.error("Static repository analysis failed:", error);
     return Response.json(
-      { error: "Repository analysis failed." },
-      { status: 502 },
+      { error: "Repository contains an unsupported or invalid source file." },
+      { status: 400 },
     );
   }
 
-  return Response.json(result);
+  let aiSummary;
+  try {
+    aiSummary = await generateProjectSummary(report, body.repoMetadata);
+  } catch (error) {
+    console.error("Groq project summary failed:", error);
+    aiSummary = fallbackProjectSummary(report, body.repoMetadata);
+  }
+
+  return Response.json({
+    ...report,
+    aiSummary,
+  });
 }
