@@ -1,12 +1,10 @@
-import runStaticAnalysis from "../../../lib/staticAnalyzer.js";
+import { runStaticAnalysis } from "@/lib/staticAnalyzer";
 
-const aiModel = "llama-3.3-70b-versatile";
 const allowedLanguages = new Set(["JavaScript", "Python", "Java", "C++", "React"]);
 const maxCodeLength = 50000;
 const rateLimitWindow = 60_000;
 const maxUserRequestsPerWindow = 20;
 const maxIpRequestsPerWindow = 50;
-const maxAiResponseLength = 250000;
 const requestLog = new Map();
 
 async function verifyFirebaseUser(request) {
@@ -78,94 +76,7 @@ function isTrustedBrowserRequest(request) {
   }
 }
 
-function extractBetween(text, startMarker, endMarker) {
-  const start = text.indexOf(startMarker);
-  if (start === -1) return "";
-
-  const contentStart = start + startMarker.length;
-  const end = text.indexOf(endMarker, contentStart);
-  return text.slice(contentStart, end === -1 ? text.length : end).trim();
-}
-
-function fallbackSummary(staticResult) {
-  return `Code scored ${staticResult.overallScore}/100. Found ${staticResult.bugs.length} bugs, ${staticResult.security.length} security issues.`;
-}
-
-async function generateAiEnhancements(code, language, staticResult) {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) throw new Error("Groq API key is not configured.");
-
-  const aiPrompt = `You are a senior code reviewer.
-
-This ${language} code has been statically analyzed with these results:
-- Score: ${staticResult.overallScore}/100
-- Bugs found: ${staticResult.bugs.length}
-- Security issues: ${staticResult.security.length}
-- Performance issues: ${staticResult.performance.length}
-
-Write:
-1. A 2-3 sentence professional summary of the code quality
-2. A fully refactored production-ready version fixing ALL issues
-
-Format your response as:
-SUMMARY_START
-your summary here
-SUMMARY_END
-REFACTORED_CODE_START
-your refactored code here
-REFACTORED_CODE_END
-
-Code to refactor:
-${code}`;
-
-  const response = await fetch(
-    "https://api.groq.com/openai/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: aiModel,
-        messages: [{ role: "user", content: aiPrompt }],
-        temperature: 0.1,
-        max_tokens: 4000,
-      }),
-      cache: "no-store",
-      signal: AbortSignal.timeout(25_000),
-    },
-  );
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Groq request failed (${response.status}): ${errorBody}`);
-  }
-
-  const data = await response.json();
-  const text = data.choices?.[0]?.message?.content;
-
-  if (typeof text !== "string" || text.length === 0) {
-    throw new Error("Groq returned no response text.");
-  }
-  if (text.length > maxAiResponseLength) {
-    throw new Error("Groq returned an oversized response.");
-  }
-
-  return {
-    summary: extractBetween(text, "SUMMARY_START", "SUMMARY_END"),
-    refactoredCode: extractBetween(
-      text,
-      "REFACTORED_CODE_START",
-      "REFACTORED_CODE_END",
-    ),
-  };
-}
-
 export async function POST(request) {
-  const startTime = Date.now();
-  console.log("Code review request started");
-
   if (!isTrustedBrowserRequest(request)) {
     return Response.json({ error: "Request rejected." }, { status: 403 });
   }
@@ -214,22 +125,68 @@ export async function POST(request) {
   }
 
   const staticResult = runStaticAnalysis(code, language);
+  staticResult.summary = `Code scored ${staticResult.overallScore}/100. Found ${staticResult.bugs.length} bugs, ${staticResult.security.length} security issues, ${staticResult.performance.length} performance issues.`;
+  staticResult.refactoredCode = "";
 
   try {
-    const aiResult = await generateAiEnhancements(code, language, staticResult);
-    return Response.json({
-      ...staticResult,
-      summary: aiResult.summary || "Code analyzed successfully.",
-      refactoredCode: aiResult.refactoredCode || "",
-    });
+    const groqResponse = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            {
+              role: "user",
+              content: `Write a 2 sentence summary of this ${language} code quality (score: ${staticResult.overallScore}/100, bugs: ${staticResult.bugs.length}, security issues: ${staticResult.security.length}). Then provide a fully refactored production-ready version.
+
+Format:
+SUMMARY_START
+your 2 sentence summary
+SUMMARY_END
+REFACTORED_CODE_START
+complete refactored code
+REFACTORED_CODE_END
+
+Code:
+${code.slice(0, 2000)}`,
+            },
+          ],
+          temperature: 0.1,
+          max_tokens: 3000,
+        }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(15000),
+      },
+    );
+
+    if (!groqResponse.ok) {
+      throw new Error(`Groq returned status ${groqResponse.status}`);
+    }
+
+    const groqData = await groqResponse.json();
+    const text = groqData.choices?.[0]?.message?.content || "";
+    const summaryMatch = text.match(/SUMMARY_START([\s\S]*?)SUMMARY_END/);
+    const refactoredMatch = text.match(
+      /REFACTORED_CODE_START([\s\S]*?)REFACTORED_CODE_END/,
+    );
+
+    staticResult.summary = summaryMatch
+      ? summaryMatch[1].trim()
+      : `Code scored ${staticResult.overallScore}/100 with ${staticResult.bugs.length} bugs found.`;
+    staticResult.refactoredCode = refactoredMatch
+      ? refactoredMatch[1].trim()
+      : "";
   } catch (error) {
-    console.error("Groq enhancement request failed:", error);
-    return Response.json({
-      ...staticResult,
-      summary: fallbackSummary(staticResult),
-      refactoredCode: "",
-    });
-  } finally {
-    console.log("Groq response time:", Date.now() - startTime, "ms");
+    console.log(
+      "Groq failed, using static analysis only:",
+      error instanceof Error ? error.message : String(error),
+    );
   }
+
+  return Response.json(staticResult);
 }
