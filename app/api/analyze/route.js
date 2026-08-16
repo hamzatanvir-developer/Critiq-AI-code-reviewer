@@ -133,7 +133,7 @@ ${code}`;
         max_tokens: 4000,
       }),
       cache: "no-store",
-      signal: AbortSignal.timeout(60_000),
+      signal: AbortSignal.timeout(25_000),
     },
   );
 
@@ -163,6 +163,9 @@ ${code}`;
 }
 
 export async function POST(request) {
+  const startTime = Date.now();
+  console.log("Code review request started");
+
   if (!isTrustedBrowserRequest(request)) {
     return Response.json({ error: "Request rejected." }, { status: 403 });
   }
@@ -226,5 +229,7 @@ export async function POST(request) {
       summary: fallbackSummary(staticResult),
       refactoredCode: "",
     });
+  } finally {
+    console.log("Groq response time:", Date.now() - startTime, "ms");
   }
 }

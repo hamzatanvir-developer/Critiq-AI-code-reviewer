@@ -1,6 +1,6 @@
 import analyzeRepo from "@/lib/analyzers/repoAnalyzer";
 
-const maxFiles = 20;
+const maxFiles = 8;
 const maxFileLength = 3000;
 const maxTotalLength = 250_000;
 
@@ -72,10 +72,6 @@ function isValidPayload(files, repoMetadata) {
   return totalLength <= maxTotalLength;
 }
 
-function fallbackProjectSummary(report, repoMetadata) {
-  return `${repoMetadata.name} received an overall code-health score of ${report.overallScore}/100 (${report.grade}). Static analysis found ${report.summary.criticalIssues} critical issues across ${report.summary.totalFiles} files. Prioritize the highest-severity security and correctness findings before addressing maintainability improvements.`;
-}
-
 async function generateProjectSummary(report, repoMetadata) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error("Groq API key is not configured.");
@@ -111,7 +107,7 @@ Best practices failed: ${report.summary.failedBestPractices}`;
         max_tokens: 250,
       }),
       cache: "no-store",
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(20_000),
     },
   );
 
@@ -175,16 +171,14 @@ export async function POST(request) {
     );
   }
 
-  let aiSummary;
   try {
-    aiSummary = await generateProjectSummary(report, body.repoMetadata);
+    const aiSummary = await generateProjectSummary(report, body.repoMetadata);
+    return Response.json({
+      ...report,
+      aiSummary,
+    });
   } catch (error) {
     console.error("Groq project summary failed:", error);
-    aiSummary = fallbackProjectSummary(report, body.repoMetadata);
+    return Response.json(report);
   }
-
-  return Response.json({
-    ...report,
-    aiSummary,
-  });
 }
