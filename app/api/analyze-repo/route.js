@@ -24,7 +24,14 @@ async function verifyFirebaseUser(request) {
   );
   const firebaseApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
 
-  if (scheme !== "Bearer" || !idToken || !firebaseApiKey) return null;
+  if (
+    scheme !== "Bearer" ||
+    !idToken ||
+    idToken.length > 4096 ||
+    !firebaseApiKey
+  ) {
+    return null;
+  }
 
   try {
     const response = await fetch(
@@ -34,7 +41,7 @@ async function verifyFirebaseUser(request) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
         cache: "no-store",
-        signal: AbortSignal.timeout(10_000),
+        signal: AbortSignal.timeout(4_000),
       },
     );
 
@@ -107,7 +114,7 @@ Best practices failed: ${report.summary.failedBestPractices}`;
         max_tokens: 250,
       }),
       cache: "no-store",
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.timeout(14_000),
     },
   );
 
@@ -123,7 +130,7 @@ Best practices failed: ${report.summary.failedBestPractices}`;
 }
 
 export async function POST(request) {
-  console.log("Analyze repo route hit");
+  console.log("POST /api/analyze-repo hit");
   console.log("GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
   console.log("GITHUB_TOKEN exists:", !!process.env.GITHUB_TOKEN);
 
@@ -140,6 +147,10 @@ export async function POST(request) {
   try {
     body = await request.json();
   } catch {
+    return Response.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
     return Response.json({ error: "Invalid request body." }, { status: 400 });
   }
 

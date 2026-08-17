@@ -24,7 +24,7 @@ async function verifyFirebaseUser(request) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
         cache: "no-store",
-        signal: AbortSignal.timeout(10_000),
+        signal: AbortSignal.timeout(4_000),
       },
     );
 
@@ -77,6 +77,8 @@ function isTrustedBrowserRequest(request) {
 }
 
 export async function POST(request) {
+  console.log("POST /api/analyze hit");
+
   if (!isTrustedBrowserRequest(request)) {
     return Response.json({ error: "Request rejected." }, { status: 403 });
   }
@@ -110,6 +112,10 @@ export async function POST(request) {
     return Response.json({ error: "Invalid request body." }, { status: 400 });
   }
 
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return Response.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
   const { code, language } = body;
   if (
     typeof code !== "string" ||
@@ -124,7 +130,16 @@ export async function POST(request) {
     );
   }
 
-  const staticResult = runStaticAnalysis(code, language);
+  let staticResult;
+  try {
+    staticResult = runStaticAnalysis(code, language);
+  } catch (error) {
+    console.error("Static code analysis failed:", error);
+    return Response.json(
+      { error: "Static code analysis failed." },
+      { status: 500 },
+    );
+  }
   staticResult.summary = `Code scored ${staticResult.overallScore}/100. Found ${staticResult.bugs.length} bugs, ${staticResult.security.length} security issues, ${staticResult.performance.length} performance issues.`;
   staticResult.refactoredCode = "";
 

@@ -78,7 +78,27 @@ export default function HomePage() {
         language,
         ...(isAnalyzingRefactored && { originalAnalysis: lastAnalysis }),
       };
-      const analysis = await analyzeCode(requestBody);
+      if (!user) {
+        setError("Authentication required. Please sign in again.");
+        return;
+      }
+
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${await user.getIdToken()}`,
+        },
+        body: JSON.stringify(requestBody),
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        const responseBody = await response.json().catch(() => null);
+        throw new Error(responseBody?.error || "Code analysis failed.");
+      }
+
+      const analysis = await response.json();
 
       if (!analysis) {
         setError("Unable to analyze the code. Please try again.");
