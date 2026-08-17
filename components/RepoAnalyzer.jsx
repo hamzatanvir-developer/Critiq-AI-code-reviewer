@@ -4,23 +4,6 @@ import { useContext, useState } from "react";
 
 import { AuthContext } from "@/context/AuthContext";
 import { analyzeRepoWithGroq } from "@/lib/groqRepo";
-import {
-  fetchFileContent,
-  fetchRepoMetadata,
-  fetchRepoTree,
-  filterImportantFiles,
-} from "@/services/repoService";
-
-const languageByExtension = {
-  js: "JavaScript",
-  jsx: "React",
-  ts: "JavaScript",
-  tsx: "React",
-  py: "Python",
-  java: "Java",
-  cpp: "C++",
-  c: "C++",
-};
 
 const severityStyles = {
   high: "border-red-400/30 bg-red-400/10 text-red-300",
@@ -39,25 +22,6 @@ function getScoreColor(score) {
   if (score < 75) return "text-yellow-300";
   if (score < 90) return "text-blue-300";
   return "text-green-400";
-}
-
-function getFileLanguage(filePath) {
-  const extension = filePath.split(".").pop()?.toLowerCase();
-  return languageByExtension[extension] ?? null;
-}
-
-function parseRepositoryUrl(repoUrl) {
-  const url = new URL(repoUrl);
-  if (url.hostname.toLowerCase() !== "github.com") {
-    throw new Error("Enter a valid public GitHub repository URL.");
-  }
-
-  const [username, rawRepositoryName] = url.pathname.split("/").filter(Boolean);
-  const reponame = rawRepositoryName?.replace(/\.git$/i, "");
-  if (!username || !reponame) {
-    throw new Error("The URL must include a GitHub username and repository.");
-  }
-  return { username, reponame };
 }
 
 function IssueBadge({ severity = "low" }) {
@@ -128,36 +92,10 @@ export default function RepoAnalyzer() {
 
     setLoading(true);
     try {
-      const { username, reponame } = parseRepositoryUrl(repoUrl.trim());
-      setProgress("Fetching repository structure...");
-      const tree = await fetchRepoTree(repoUrl.trim());
-
-      setProgress("Fetching repository details...");
-      const repoDetails = await fetchRepoMetadata(username, reponame);
-      setMetadata(repoDetails);
-
-      setProgress("Selecting high-impact source files...");
-      const importantFiles = filterImportantFiles(tree);
-      if (!importantFiles.length) {
-        throw new Error("No supported source files were found in this repository.");
-      }
-
-      setProgress("Reading source files...");
-      const readableFiles = [];
-      for (const filePath of importantFiles) {
-        const language = getFileLanguage(filePath);
-        if (!language) continue;
-        const content = await fetchFileContent(username, reponame, filePath);
-        if (content !== null) readableFiles.push({ path: filePath, content, language });
-      }
-
-      if (!readableFiles.length) {
-        throw new Error("GitHub did not return readable supported source files.");
-      }
-
-      setProgress(`Building report for ${readableFiles.length} files...`);
-      const data = await analyzeRepoWithGroq(readableFiles, repoDetails);
+      setProgress("Mapping the repository and analyzing critical files...");
+      const data = await analyzeRepoWithGroq(repoUrl.trim());
       if (!data) throw new Error("The repository report could not be generated. Try again shortly.");
+      setMetadata(data.repoMetadata ?? null);
       setResult(data);
     } catch (analysisError) {
       setError(
@@ -178,6 +116,9 @@ export default function RepoAnalyzer() {
   const recommendations = Array.isArray(result?.recommendations) ? result.recommendations : [];
   const languageBreakdown = result?.languageBreakdown ?? {};
   const health = result?.codeHealthTrend ?? {};
+  const fullRepoOverview = result?.fullRepoOverview ?? {};
+  const repositoryLanguages = fullRepoOverview.languages ?? {};
+  const repositoryStructure = fullRepoOverview.structure ?? {};
   const totalPractices =
     (reportSummary.passedBestPractices ?? 0) +
     (reportSummary.failedBestPractices ?? 0);
@@ -243,6 +184,62 @@ export default function RepoAnalyzer() {
 
       {result && (
         <div className="mt-8 space-y-6">
+          <section className="rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-5 sm:p-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">Repository Overview</p>
+                <h2 className="mt-2 text-2xl font-black">The complete repository at a glance</h2>
+              </div>
+              <p className="text-xs text-[#707070]">Showing top 20 most critical files</p>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {[
+                ["Total files", fullRepoOverview.totalFiles ?? 0, "text-white"],
+                ["Files analyzed", fullRepoOverview.analyzedFiles ?? 0, "text-green-400"],
+                ["Files not analyzed", fullRepoOverview.skippedFiles ?? 0, "text-yellow-300"],
+                ["Analyzable files", fullRepoOverview.analyzableFiles ?? 0, "text-cyan-300"],
+              ].map(([label, value, color]) => (
+                <div key={label} className="rounded-xl border border-[#2a2a2a] bg-[#151515] p-4">
+                  <p className="text-[11px] uppercase tracking-wider text-[#606060]">{label}</p>
+                  <p className={`mt-2 text-3xl font-black ${color}`}>{value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+              <div className="rounded-xl border border-[#2a2a2a] bg-[#151515] p-4">
+                <h3 className="text-sm font-bold">Languages across the repository</h3>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {Object.entries(repositoryLanguages).length ? Object.entries(repositoryLanguages).map(([language, count]) => (
+                    <span key={language} className="rounded-lg border border-[#303030] bg-[#111111] px-3 py-2 text-xs text-[#b8b8b8]">
+                      {language} <strong className="ml-1 text-white">{count}</strong>
+                    </span>
+                  )) : <span className="text-xs text-[#606060]">No supported source languages detected.</span>}
+                </div>
+              </div>
+
+              <details className="group rounded-xl border border-[#2a2a2a] bg-[#151515]" open>
+                <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-sm font-bold">
+                  Folder structure
+                  <span className="text-[#606060] transition-transform group-open:rotate-180">⌄</span>
+                </summary>
+                <div className="max-h-80 space-y-2 overflow-y-auto border-t border-[#2a2a2a] p-4" style={{ scrollbarWidth: "thin", scrollbarColor: "#3a3a3a transparent" }}>
+                  {Object.entries(repositoryStructure).map(([folder, files]) => (
+                    <details key={folder} className="rounded-lg border border-[#282828] bg-[#111111]">
+                      <summary className="cursor-pointer break-all px-3 py-2 font-mono text-xs text-cyan-300">
+                        {folder} <span className="text-[#606060]">({files.length})</span>
+                      </summary>
+                      <ul className="space-y-1 border-t border-[#242424] px-4 py-2">
+                        {files.map((filename) => <li key={filename} className="break-all font-mono text-[11px] text-[#858585]">{filename}</li>)}
+                      </ul>
+                    </details>
+                  ))}
+                </div>
+              </details>
+            </div>
+          </section>
+
           <section className="rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-5 sm:p-8">
             <div className="flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0 flex-1">
@@ -251,9 +248,11 @@ export default function RepoAnalyzer() {
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-[#a0a0a0]">
                   {metadata?.description || "No repository description provided."}
                 </p>
-                <p className="mt-4 max-w-4xl border-l-2 border-green-400/50 pl-4 text-sm leading-7 text-[#d0d0d0]">
-                  {result.aiSummary}
-                </p>
+                {result.aiSummary && (
+                  <p className="mt-4 max-w-4xl border-l-2 border-green-400/50 pl-4 text-sm leading-7 text-[#d0d0d0]">
+                    {result.aiSummary}
+                  </p>
+                )}
               </div>
               <div className="flex shrink-0 items-center gap-4 rounded-2xl border border-[#2a2a2a] bg-[#111111] p-5">
                 <div>
