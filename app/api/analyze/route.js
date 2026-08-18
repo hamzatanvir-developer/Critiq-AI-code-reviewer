@@ -1,4 +1,5 @@
 import { runStaticAnalysis } from "@/lib/staticAnalyzer";
+import refactorCode from "@/lib/refactorer";
 
 const allowedLanguages = new Set(["JavaScript", "Python", "Java", "C++", "React"]);
 const maxCodeLength = 50000;
@@ -133,6 +134,7 @@ export async function POST(request) {
   let staticResult;
   try {
     staticResult = runStaticAnalysis(code, language);
+    staticResult.refactoredCode = refactorCode(code, language, staticResult);
   } catch (error) {
     console.error("Static code analysis failed:", error);
     return Response.json(
@@ -141,71 +143,39 @@ export async function POST(request) {
     );
   }
   staticResult.summary = `Code scored ${staticResult.overallScore}/100. Found ${staticResult.bugs.length} bugs, ${staticResult.security.length} security issues, ${staticResult.performance.length} performance issues.`;
-  staticResult.refactoredCode = "";
 
   try {
-    const groqModels = ["llama-3.1-8b-instant"];
-    const safeCode = (code || "").slice(0, 1500);
-    const safeLanguage = language || "JavaScript";
-    const safeScore = staticResult.overallScore || 0;
-    const safeBugs = staticResult.bugs?.length || 0;
-    const safeSecurity = staticResult.security?.length || 0;
+    const prompt = `Write a 2 sentence professional code quality summary for this ${language} code.
+Score: ${staticResult.overallScore}/100
+Bugs found: ${staticResult.bugs?.length || 0}
+Security issues: ${staticResult.security?.length || 0}
+Performance issues: ${staticResult.performance?.length || 0}
 
-    const groqPrompt = `Write a 2 sentence code quality summary for ${safeLanguage} code scoring ${safeScore}/100 with ${safeBugs} bugs and ${safeSecurity} security issues.
-
-Then provide the complete refactored production-ready version of this code:
-
-${safeCode}
-
-Format exactly like this:
-SUMMARY_START
-your 2 sentence summary here
-SUMMARY_END
-REFACTORED_CODE_START
-complete refactored code here
-REFACTORED_CODE_END`;
-    console.log("Sending to Groq, prompt length:", groqPrompt.length);
-    console.log("Model:", groqModels[0]);
-    console.log("Groq prompt preview:", groqPrompt.slice(0, 200));
-    const groqResponse = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
+Code:
+${code.slice(0, 500)}`;
+    const geminiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY ?? "")}`,
       {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: groqModels[0],
-          messages: [{ role: "user", content: groqPrompt }],
-          temperature: 0.1,
-          max_tokens: 3000,
+          contents: [{ parts: [{ text: prompt }] }],
         }),
         cache: "no-store",
         signal: AbortSignal.timeout(15000),
       },
     );
 
-    if (!groqResponse.ok) {
-      const errorBody = await groqResponse.text();
-      console.log("Groq 400 error body:", errorBody);
-      throw new Error(`Groq returned status ${groqResponse.status}`);
+    if (!geminiResponse.ok) {
+      throw new Error(`Gemini returned status ${geminiResponse.status}`);
     }
 
-    const groqData = await groqResponse.json();
-    const text = groqData.choices?.[0]?.message?.content || "";
-    console.log("Groq response length:", text.length);
-    const summaryMatch = text.match(/SUMMARY_START([\s\S]*?)SUMMARY_END/);
-    const refactoredMatch = text.match(/REFACTORED_CODE_START([\s\S]*?)REFACTORED_CODE_END/);
-    console.log("Refactored code found:", !!refactoredMatch);
-
-    staticResult.summary = summaryMatch
-      ? summaryMatch[1].trim()
-      : `Code scored ${staticResult.overallScore}/100 with ${staticResult.bugs.length} bugs found.`;
-    staticResult.refactoredCode = refactoredMatch ? refactoredMatch[1].trim() : "";
+    const geminiData = await geminiResponse.json();
+    const summary = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    if (summary) staticResult.summary = summary;
   } catch (error) {
     console.log(
-      "Groq failed, using static analysis only:",
+      "Gemini failed, using static analysis summary:",
       error instanceof Error ? error.message : String(error),
     );
   }
