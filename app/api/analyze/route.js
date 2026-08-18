@@ -144,20 +144,8 @@ export async function POST(request) {
   staticResult.refactoredCode = "";
 
   try {
-    let groqResponse = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          messages: [
-            {
-              role: "user",
-              content: `Write a 2 sentence summary of this ${language} code quality (score: ${staticResult.overallScore}/100, bugs: ${staticResult.bugs.length}, security issues: ${staticResult.security.length}). Then provide a fully refactored production-ready version.
+    const model = "llama-3.1-8b-instant";
+    const prompt = `Write a 2 sentence summary of this ${language} code quality (score: ${staticResult.overallScore}/100, bugs: ${staticResult.bugs.length}, security issues: ${staticResult.security.length}). Then provide a fully refactored production-ready version.
 
 Format:
 SUMMARY_START
@@ -168,11 +156,22 @@ complete refactored code
 REFACTORED_CODE_END
 
 Code:
-${code.slice(0, 2000)}`,
-            },
-          ],
+${code.slice(0, 2000)}`;
+    console.log("Sending to Groq, prompt length:", prompt.length);
+    console.log("Model:", model);
+    let groqResponse = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: String(prompt) }],
           temperature: 0.1,
-          max_tokens: 4000,
+          max_tokens: 3000,
         }),
         cache: "no-store",
         signal: AbortSignal.timeout(15000),
@@ -190,25 +189,9 @@ ${code.slice(0, 2000)}`,
           },
           body: JSON.stringify({
             model: "mixtral-8x7b-32768",
-            messages: [
-              {
-                role: "user",
-                content: `Write a 2 sentence summary of this ${language} code quality (score: ${staticResult.overallScore}/100, bugs: ${staticResult.bugs.length}, security issues: ${staticResult.security.length}). Then provide a fully refactored production-ready version.
-
-Format:
-SUMMARY_START
-your 2 sentence summary
-SUMMARY_END
-REFACTORED_CODE_START
-complete refactored code
-REFACTORED_CODE_END
-
-Code:
-${code.slice(0, 2000)}`,
-              },
-            ],
+            messages: [{ role: "user", content: String(prompt) }],
             temperature: 0.1,
-            max_tokens: 4000,
+            max_tokens: 3000,
           }),
           cache: "no-store",
           signal: AbortSignal.timeout(15000),
@@ -217,6 +200,8 @@ ${code.slice(0, 2000)}`,
     }
 
     if (!groqResponse.ok) {
+      const errorBody = await groqResponse.text();
+      console.log("Groq 400 error body:", errorBody);
       throw new Error(`Groq returned status ${groqResponse.status}`);
     }
 
