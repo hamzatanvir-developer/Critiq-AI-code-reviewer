@@ -144,22 +144,30 @@ export async function POST(request) {
   staticResult.refactoredCode = "";
 
   try {
-    const model = "llama-3.1-8b-instant";
-    const prompt = `Write a 2 sentence summary of this ${language} code quality (score: ${staticResult.overallScore}/100, bugs: ${staticResult.bugs.length}, security issues: ${staticResult.security.length}). Then provide a fully refactored production-ready version.
+    const groqModels = ["llama-3.1-8b-instant"];
+    const safeCode = (code || "").slice(0, 1500);
+    const safeLanguage = language || "JavaScript";
+    const safeScore = staticResult.overallScore || 0;
+    const safeBugs = staticResult.bugs?.length || 0;
+    const safeSecurity = staticResult.security?.length || 0;
 
-Format:
+    const groqPrompt = `Write a 2 sentence code quality summary for ${safeLanguage} code scoring ${safeScore}/100 with ${safeBugs} bugs and ${safeSecurity} security issues.
+
+Then provide the complete refactored production-ready version of this code:
+
+${safeCode}
+
+Format exactly like this:
 SUMMARY_START
-your 2 sentence summary
+your 2 sentence summary here
 SUMMARY_END
 REFACTORED_CODE_START
-complete refactored code
-REFACTORED_CODE_END
-
-Code:
-${code.slice(0, 2000)}`;
-    console.log("Sending to Groq, prompt length:", prompt.length);
-    console.log("Model:", model);
-    let groqResponse = await fetch(
+complete refactored code here
+REFACTORED_CODE_END`;
+    console.log("Sending to Groq, prompt length:", groqPrompt.length);
+    console.log("Model:", groqModels[0]);
+    console.log("Groq prompt preview:", groqPrompt.slice(0, 200));
+    const groqResponse = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
@@ -168,8 +176,8 @@ ${code.slice(0, 2000)}`;
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model,
-          messages: [{ role: "user", content: String(prompt) }],
+          model: groqModels[0],
+          messages: [{ role: "user", content: groqPrompt }],
           temperature: 0.1,
           max_tokens: 3000,
         }),
@@ -177,27 +185,6 @@ ${code.slice(0, 2000)}`;
         signal: AbortSignal.timeout(15000),
       },
     );
-
-    if (groqResponse.status === 404) {
-      groqResponse = await fetch(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
-            messages: [{ role: "user", content: String(prompt) }],
-            temperature: 0.1,
-            max_tokens: 3000,
-          }),
-          cache: "no-store",
-          signal: AbortSignal.timeout(15000),
-        },
-      );
-    }
 
     if (!groqResponse.ok) {
       const errorBody = await groqResponse.text();
