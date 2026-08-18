@@ -144,7 +144,7 @@ export async function POST(request) {
   staticResult.refactoredCode = "";
 
   try {
-    const groqResponse = await fetch(
+    let groqResponse = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
@@ -153,7 +153,7 @@ export async function POST(request) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
+          model: "llama-3.1-8b-instant",
           messages: [
             {
               role: "user",
@@ -172,12 +172,49 @@ ${code.slice(0, 2000)}`,
             },
           ],
           temperature: 0.1,
-          max_tokens: 3000,
+          max_tokens: 4000,
         }),
         cache: "no-store",
         signal: AbortSignal.timeout(15000),
       },
     );
+
+    if (groqResponse.status === 404) {
+      groqResponse = await fetch(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "mixtral-8x7b-32768",
+            messages: [
+              {
+                role: "user",
+                content: `Write a 2 sentence summary of this ${language} code quality (score: ${staticResult.overallScore}/100, bugs: ${staticResult.bugs.length}, security issues: ${staticResult.security.length}). Then provide a fully refactored production-ready version.
+
+Format:
+SUMMARY_START
+your 2 sentence summary
+SUMMARY_END
+REFACTORED_CODE_START
+complete refactored code
+REFACTORED_CODE_END
+
+Code:
+${code.slice(0, 2000)}`,
+              },
+            ],
+            temperature: 0.1,
+            max_tokens: 4000,
+          }),
+          cache: "no-store",
+          signal: AbortSignal.timeout(15000),
+        },
+      );
+    }
 
     if (!groqResponse.ok) {
       throw new Error(`Groq returned status ${groqResponse.status}`);
@@ -185,17 +222,15 @@ ${code.slice(0, 2000)}`,
 
     const groqData = await groqResponse.json();
     const text = groqData.choices?.[0]?.message?.content || "";
+    console.log("Groq response length:", text.length);
     const summaryMatch = text.match(/SUMMARY_START([\s\S]*?)SUMMARY_END/);
-    const refactoredMatch = text.match(
-      /REFACTORED_CODE_START([\s\S]*?)REFACTORED_CODE_END/,
-    );
+    const refactoredMatch = text.match(/REFACTORED_CODE_START([\s\S]*?)REFACTORED_CODE_END/);
+    console.log("Refactored code found:", !!refactoredMatch);
 
     staticResult.summary = summaryMatch
       ? summaryMatch[1].trim()
       : `Code scored ${staticResult.overallScore}/100 with ${staticResult.bugs.length} bugs found.`;
-    staticResult.refactoredCode = refactoredMatch
-      ? refactoredMatch[1].trim()
-      : "";
+    staticResult.refactoredCode = refactoredMatch ? refactoredMatch[1].trim() : "";
   } catch (error) {
     console.log(
       "Groq failed, using static analysis only:",
