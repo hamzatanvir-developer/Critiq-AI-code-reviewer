@@ -11,10 +11,13 @@ const requestLog = new Map();
 async function verifyFirebaseUser(request) {
   const authorization = request.headers.get("authorization") ?? "";
   const [scheme, idToken] = authorization.split(" ");
+  console.log("Auth header received:", !!authorization);
+  console.log("Token length received:", idToken?.length);
 
   if (scheme !== "Bearer" || !idToken || idToken.length > 4096) return null;
 
   const firebaseApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+  console.log("Firebase API key exists:", !!firebaseApiKey);
   if (!firebaseApiKey) return null;
 
   try {
@@ -29,7 +32,12 @@ async function verifyFirebaseUser(request) {
       },
     );
 
-    if (!response.ok) return null;
+    console.log("Firebase verify response status:", response.status);
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.log("Firebase verify error:", errBody);
+      return null;
+    }
 
     const data = await response.json();
     return data.users?.[0]?.localId ?? null;

@@ -83,6 +83,14 @@ export default function HomePage() {
         return;
       }
 
+      try {
+        const token = await user.getIdToken();
+        console.log("Token exists:", !!token);
+        console.log("Token length:", token?.length);
+      } catch (tokenError) {
+        console.log("Token error:", tokenError.message);
+      }
+
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: {
