@@ -1,9 +1,9 @@
 "use client";
 
 import { useContext, useState } from "react";
+import { getAuth } from "firebase/auth";
 
 import { AuthContext } from "@/context/AuthContext";
-import { analyzeRepoWithGroq } from "@/lib/groqRepo";
 
 const severityStyles = {
   high: "border-red-400/30 bg-red-400/10 text-red-300",
@@ -93,7 +93,18 @@ export default function RepoAnalyzer() {
     setLoading(true);
     try {
       setProgress("Mapping the repository and analyzing critical files...");
-      const data = await analyzeRepoWithGroq(repoUrl.trim());
+      const auth = getAuth();
+      const token = await auth.currentUser?.getIdToken();
+      const response = await fetch("/api/analyze-repo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ repoUrl: repoUrl.trim() }),
+        cache: "no-store",
+      });
+      const data = response.ok ? await response.json() : null;
       if (!data) throw new Error("The repository report could not be generated. Try again shortly.");
       setMetadata(data.repoMetadata ?? null);
       setResult(data);
