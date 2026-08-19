@@ -134,6 +134,14 @@ export async function POST(request) {
   let staticResult;
   try {
     staticResult = runStaticAnalysis(code, language);
+    console.log("Static analysis result:");
+    console.log("Score:", staticResult.overallScore);
+    console.log("Bugs count:", staticResult.bugs?.length);
+    console.log("Security count:", staticResult.security?.length);
+    console.log("Performance count:", staticResult.performance?.length);
+    console.log("Quality count:", staticResult.quality?.length);
+    console.log("BestPractices count:", staticResult.bestPractices?.length);
+    console.log("First bug:", JSON.stringify(staticResult.bugs?.[0]));
     staticResult.refactoredCode = refactorCode(code, language, staticResult);
   } catch (error) {
     console.error("Static code analysis failed:", error);
