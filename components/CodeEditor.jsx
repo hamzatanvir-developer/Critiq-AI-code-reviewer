@@ -89,7 +89,7 @@ export default function CodeEditor({ onAnalyze, loading }) {
               )}
               <span
                 className="font-mono font-bold text-lg ml-1 animate-pulse"
-                style={{ color: "#f59e0b" }}
+                style={{ color: "#2e1bd7" }}
               >
                 ...
               </span>
