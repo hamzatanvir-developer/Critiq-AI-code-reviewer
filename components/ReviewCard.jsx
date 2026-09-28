@@ -141,7 +141,9 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
             </span>
             <span className="font-mono text-sm text-zinc-400">
               Line {item.line}
+              {item.column ? `:${item.column}` : ""}
             </span>
+            {item.ruleId && <span className="font-mono text-xs text-zinc-400">{item.ruleId}</span>}
           </div>
           <p className="mb-1 font-medium text-white">{item.issue}</p>
         </article>
@@ -164,6 +166,11 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
 
     return (
       <article key={index} className="mb-3 rounded-lg border-l-4 border-[#3a3a3a] bg-[#161616] p-4">
+        {(item.ruleId || item.line) && (
+          <p className="mb-2 font-mono text-xs text-zinc-400">
+            {item.ruleId}{item.line ? ` · Line ${item.line}${item.column ? `:${item.column}` : ""}` : ""}
+          </p>
+        )}
         <p className="mb-1 font-medium text-white">{item.issue}</p>
         <p className="text-sm leading-6 text-zinc-400">
           <span className="font-medium text-zinc-300">{detailLabel}:</span>{" "}
@@ -183,8 +190,8 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
               Refactored Code Analysis
             </p>
             <p className="text-xs text-[#a0a0a0]">
-              Score improved from {result.originalScore}/100 to{" "}
-              {result.overallScore}/100 (+{result.improvement} points)
+              Previous score: {result.originalScore}/100. Current score:{" "}
+              {result.overallScore}/100.
             </p>
           </div>
         </div>
@@ -201,6 +208,17 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
           {result.summary}
         </p>
       </div>
+
+      {result.analysis && (
+        <details className="mb-6 rounded-xl border border-[#2a2a2a] p-4 text-sm text-[#a0a0a0]">
+          <summary className="cursor-pointer text-[#f5f5f5]">
+            {result.analysis.engine} · {result.analysis.mode === "heuristic" ? "Experimental checks" : "Static rules"}
+          </summary>
+          <ul className="mt-3 list-disc space-y-2 pl-5">
+            {result.analysis.limitations?.map((limitation) => <li key={limitation}>{limitation}</li>)}
+          </ul>
+        </details>
+      )}
 
       <div
         className="relative mb-8 overflow-hidden rounded-2xl p-4 sm:p-6"
@@ -299,8 +317,8 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
 
       {result.isRefactoredAnalysis && (
         <p className="mb-4 text-xs italic text-[#606060]">
-          * Remaining issues are new observations on the refactored code. The
-          original issues have been resolved.
+          Findings describe the submitted version. A refactor does not guarantee
+          that all original issues have been resolved.
         </p>
       )}
 
@@ -320,24 +338,45 @@ ${result.refactoredCode?.trim() || "No refactored code available."}
             <div className="mb-4 flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
               <div>
                 <div className="mb-2 flex items-center gap-2">
-                  <h3 className="text-lg font-semibold text-white">Improved Code</h3>
+                  <h3 className="text-lg font-semibold text-white">Suggested Code</h3>
                   <span className="rounded-full border border-[#3a3a3a] bg-[#111111] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#a0a0a0]">
-                    AI Rewritten
+                    Static Fixes
                   </span>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(result.refactoredCode);
-                  setCodeCopied(true);
-                  setTimeout(() => setCodeCopied(false), 1500);
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(String(result.refactoredCode ?? ""));
+                    setCodeCopied(true);
+                    setTimeout(() => setCodeCopied(false), 1500);
+                  } catch {
+                    setCodeCopied(false);
+                  }
                 }}
                 className="rounded-lg border border-[#2a2a2a] px-3 py-1.5 text-xs text-[#a0a0a0] transition-all hover:text-[#f5f5f5]"
               >
                 {codeCopied ? "✓ Copied" : "Copy Code"}
               </button>
             </div>
+
+            {result.refactoring && (
+              <div className="mb-4 rounded-xl border border-[#3a3a3a] bg-[#111111] p-4 text-sm text-[#a0a0a0]">
+                <p className="font-semibold text-[#f5f5f5]">
+                  {result.refactoring.status === "changed" ? "Automatic fixes applied" : "No automatic changes"}
+                </p>
+                <p className="mt-2">{result.refactoring.message}</p>
+                <p className="mt-2">
+                  Score: {result.refactoring.originalScore}/100 → {result.refactoring.resultingScore}/100.
+                  {" "}{result.refactoring.resolvedFindings} findings resolved; {result.refactoring.remainingFindings} remain.
+                </p>
+                {result.refactoring.appliedRules?.length > 0 && (
+                  <p className="mt-2 font-mono text-xs">Rules: {result.refactoring.appliedRules.join(", ")}</p>
+                )}
+                <p className="mt-2 text-xs">Review and test before use. Behavior has not been verified.</p>
+              </div>
+            )}
 
             {result.refactoredCode && String(result.refactoredCode).trim().length > 0 ? (
               <pre className="max-w-full overflow-x-auto whitespace-pre-wrap break-words rounded-xl bg-[#111111] p-3 font-mono text-xs text-green-400 sm:p-6 sm:text-sm">

@@ -1,7 +1,8 @@
+import { createGitHubClient, openRepositorySnapshot, parseRepositoryUrl, readSnapshotBatch } from "@/lib/server/githubSnapshot";
 import analyzeRepo from "@/lib/analyzers/repoAnalyzer";
 import { filterImportantFiles, getFileLanguage, getFullFileTree } from "@/lib/repoTree";
+import { checkRateLimit } from "@/lib/server/rateLimit";
 
-const maxFileLength = 3000;
 const routeDeadlineMs = 19_000;
 
 function isTrustedRequest(request) {
@@ -37,94 +38,19 @@ async function verifyFirebaseUser(request) {
   }
 }
 
-function parseRepoUrl(repoUrl) {
-  const url = new URL(repoUrl);
-  if (url.protocol !== "https:" || url.hostname.toLowerCase() !== "github.com") {
-    throw new Error("Enter a valid public GitHub repository URL.");
-  }
-  const [owner, rawRepository] = url.pathname.split("/").filter(Boolean);
-  const repository = rawRepository?.replace(/\.git$/i, "");
-  const validPart = /^[A-Za-z0-9_.-]+$/;
-  if (!owner || !repository || !validPart.test(owner) || !validPart.test(repository)) {
-    throw new Error("The URL must include a valid GitHub owner and repository.");
-  }
-  return { owner, repository };
-}
-
-function githubHeaders() {
-  return {
-    Accept: "application/vnd.github+json",
-    "X-GitHub-Api-Version": "2022-11-28",
-    ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
-  };
-}
-
-async function fetchGitHubJson(url, timeoutMs) {
-  const response = await fetch(url, {
-    headers: githubHeaders(),
-    cache: "no-store",
-    signal: AbortSignal.timeout(timeoutMs),
-  });
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(`GitHub request failed (${response.status}): ${message.slice(0, 200)}`);
-  }
-  return response.json();
-}
-
-async function fetchSourceFile(owner, repository, path, timeoutMs) {
-  try {
-    const encodedPath = path.split("/").map(encodeURIComponent).join("/");
-    const data = await fetchGitHubJson(
-      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/contents/${encodedPath}`,
-      timeoutMs,
-    );
-    if (data.type !== "file" || typeof data.content !== "string") return null;
-    const content = Buffer.from(data.content.replace(/\s/g, ""), "base64").toString("utf8").slice(0, maxFileLength);
-    return content ? { path, content, language: getFileLanguage(path) } : null;
-  } catch (error) {
-    console.warn(`Could not read ${path}:`, error.message);
-    return null;
-  }
-}
-
-async function generateProjectSummary(report, metadata, timeoutMs) {
-  if (!process.env.GROQ_API_KEY) throw new Error("Groq API key is not configured.");
-  const prompt = `Write exactly three concise professional sentences summarizing this repository report. Do not use markdown.
-Repository: ${metadata.name}
-Description: ${metadata.description || "No description provided"}
-Score: ${report.overallScore}/100 (${report.grade})
-Analyzed files: ${report.summary.totalFiles}
-Bugs: ${report.summary.totalBugs}
-Security issues: ${report.summary.totalSecurityIssues}
-Critical issues: ${report.summary.criticalIssues}`;
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "llama-3.1-8b-instant",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.1,
-      max_tokens: 250,
-    }),
-    cache: "no-store",
-    signal: AbortSignal.timeout(timeoutMs),
-  });
-  if (!response.ok) throw new Error(`Groq summary failed (${response.status}).`);
-  const data = await response.json();
-  const summary = data.choices?.[0]?.message?.content?.trim();
-  if (!summary) throw new Error("Groq returned an empty summary.");
-  return summary;
-}
-
 export async function POST(request) {
-  console.log("POST /api/analyze-repo hit");
-  console.log("GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
-  console.log("GITHUB_TOKEN exists:", !!process.env.GITHUB_TOKEN);
   const deadline = Date.now() + routeDeadlineMs;
 
   if (!isTrustedRequest(request)) return Response.json({ error: "Request rejected." }, { status: 403 });
-  if (!(await verifyFirebaseUser(request))) return Response.json({ error: "Authentication required." }, { status: 401 });
+  const userId = await verifyFirebaseUser(request);
+  if (!userId) return Response.json({ error: "Authentication required." }, { status: 401 });
+  const rateLimit = checkRateLimit(`repo:${userId}`, 6, 60_000);
+  if (!rateLimit.allowed) {
+    return Response.json(
+      { error: "Too many repository analyses. Please wait a minute." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfter) } },
+    );
+  }
 
   let body;
   try {
@@ -135,32 +61,26 @@ export async function POST(request) {
 
   let repository;
   try {
-    repository = parseRepoUrl(body?.repoUrl);
+    repository = parseRepositoryUrl(body?.repoUrl);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 400 });
   }
 
   try {
-    const { owner, repository: name } = repository;
-    const baseUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`;
-    const [treeData, metadataData] = await Promise.all([
-      fetchGitHubJson(`${baseUrl}/git/trees/HEAD?recursive=1`, 5_000),
-      fetchGitHubJson(baseUrl, 5_000),
-    ]);
-    const tree = (treeData.tree ?? []).filter((entry) => entry.type === "blob" && typeof entry.path === "string");
+    const get = createGitHubClient({ ...repository, deadline });
+    const snapshot = await openRepositorySnapshot(get, { maxTreeRequests: 6 });
+    const metadataData = snapshot.metadata;
+    const tree = snapshot.entries.filter((entry) => entry.type === "blob");
     const overview = getFullFileTree(tree);
-    const importantFiles = filterImportantFiles(tree);
+    const regular = tree.filter((entry) => ["100644", "100755"].includes(entry.mode));
+    const importantFiles = filterImportantFiles(regular);
     if (!importantFiles.length) return Response.json({ error: "No supported source files were found." }, { status: 400 });
-
-    const contentTimeout = Math.max(500, Math.min(5_000, deadline - Date.now()));
-    const files = (await Promise.all(
-      importantFiles.map((path) => fetchSourceFile(owner, name, path, contentTimeout)),
-    )).filter(Boolean);
-    console.log("Files fetched:", files.length);
+    const indexed = new Map(regular.map((entry) => [entry.path, entry]));
+    const fetched = await readSnapshotBatch(get, importantFiles.map((path) => indexed.get(path)));
+    const files = fetched.filter((file) => !file.reason).map((file) => ({ ...file, language: getFileLanguage(file.path) }));
     if (!files.length) return Response.json({ error: "GitHub did not return readable source files." }, { status: 502 });
 
     const report = analyzeRepo(files);
-    console.log("Static analysis done, score:", report.overallScore);
     const repoMetadata = {
       name: metadataData.name,
       description: metadataData.description,
@@ -173,6 +93,7 @@ export async function POST(request) {
     const result = {
       ...report,
       repoMetadata,
+      commitSha: snapshot.commitSha,
       fullRepoOverview: {
         totalFiles: overview.totalFiles,
         analyzedFiles: files.length,
@@ -180,21 +101,19 @@ export async function POST(request) {
         analyzableFiles: overview.analyzableFiles,
         languages: overview.languages,
         structure: overview.structure,
+        treeTruncated: !snapshot.complete,
+        incompleteReasons: snapshot.reasons,
+        fileSkips: fetched.filter((file) => file.reason).map(({ path, reason }) => ({ path, reason })),
+        scope: "sample",
+        unreadableOrOversizedFiles: importantFiles.filter((path) => !files.some((file) => file.path === path)),
       },
     };
 
-    const remainingMs = deadline - Date.now();
-    if (remainingMs > 500) {
-      try {
-        result.aiSummary = await generateProjectSummary(report, repoMetadata, Math.min(10_000, remainingMs));
-      } catch (error) {
-        console.error("Groq project summary failed:", error.message);
-      }
-    }
+    result.projectSummary = `Static analysis reviewed ${files.length} selected files out of ${overview.totalFiles}. The sampled files scored ${report.overallScore}/100 with ${report.summary.totalBugs} bug findings and ${report.summary.totalSecurityIssues} security review findings. Unanalyzed files are not covered by this score.`;
     return Response.json(result);
   } catch (error) {
-    console.error("Repository analysis failed:", error);
-    const status = /GitHub request failed \(404\)/.test(error.message) ? 404 : 502;
+    console.error("Repository analysis failed:", error.reason ?? "analysis-error");
+    const status = error.status ?? 502;
     return Response.json(
       { error: status === 404 ? "Repository not found or not public." : "Repository analysis failed. Please try again." },
       { status },

@@ -16,6 +16,7 @@ export default function HistoryPage() {
   const router = useRouter();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
   const [selectedReview, setSelectedReview] = useState(null);
 
@@ -33,6 +34,7 @@ export default function HistoryPage() {
 
     async function loadReviews() {
       setLoading(true);
+      setError("");
 
       try {
         const userReviews = await getUserReviews(user.uid);
@@ -40,6 +42,8 @@ export default function HistoryPage() {
         if (active) {
           setReviews(userReviews);
         }
+      } catch {
+        if (active) setError("Unable to load your review history. Please try again.");
       } finally {
         if (active) {
           setLoading(false);
@@ -60,6 +64,7 @@ export default function HistoryPage() {
     }
 
     setDeletingId(reviewId);
+    setError("");
 
     try {
       await deleteReview(user.uid, reviewId);
@@ -69,6 +74,8 @@ export default function HistoryPage() {
       if (selectedReview?.id === reviewId) {
         setSelectedReview(null);
       }
+    } catch {
+      setError("Unable to delete this review. Please try again.");
     } finally {
       setDeletingId(null);
     }
@@ -88,6 +95,12 @@ export default function HistoryPage() {
         <h1 className="mb-8 pt-8 text-3xl font-bold font-space text-[#f5f5f5]">
           Review History
         </h1>
+
+        {error && (
+          <p role="alert" className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {error}
+          </p>
+        )}
 
         {loading ? (
           <section className="flex min-h-[420px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-cyan-400/10 bg-[#141414] px-6 py-16 text-center shadow-[inset_0_0_80px_rgba(34,211,238,0.025)]">

@@ -1,9 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverActions: {
-      bodySizeLimit: "2mb",
-    },
+  // Node-based analysis libraries must not be bundled as browser/edge code.
+  serverExternalPackages: ["eslint", "eslint-plugin-react", "eslint-plugin-react-hooks", "@astral-sh/ruff-wasm-nodejs", "web-tree-sitter", "prettier", "prettier-plugin-java"],
+  outputFileTracingIncludes: {
+    "/api/inngest": [
+      "./node_modules/prettier-plugin-java/dist/tree-sitter-java_orchard.wasm",
+      "./node_modules/tree-sitter-cpp/tree-sitter-cpp.wasm",
+    ],
+    "/api/analyze*": [
+      "./node_modules/prettier-plugin-java/dist/tree-sitter-java_orchard.wasm",
+      "./node_modules/tree-sitter-cpp/tree-sitter-cpp.wasm",
+    ],
   },
   async headers() {
     return [

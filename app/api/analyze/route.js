@@ -1,23 +1,19 @@
-import { runStaticAnalysis } from "@/lib/staticAnalyzer";
-import refactorCode from "@/lib/refactorer";
+import { reviewCode } from "@/lib/reviewCode";
+import { checkRateLimit } from "@/lib/server/rateLimit";
 
 const allowedLanguages = new Set(["JavaScript", "Python", "Java", "C++", "React"]);
 const maxCodeLength = 50000;
 const rateLimitWindow = 60_000;
 const maxUserRequestsPerWindow = 20;
 const maxIpRequestsPerWindow = 50;
-const requestLog = new Map();
 
 async function verifyFirebaseUser(request) {
   const authorization = request.headers.get("authorization") ?? "";
   const [scheme, idToken] = authorization.split(" ");
-  console.log("Auth header received:", !!authorization);
-  console.log("Token length received:", idToken?.length);
 
   if (scheme !== "Bearer" || !idToken || idToken.length > 4096) return null;
 
   const firebaseApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-  console.log("Firebase API key exists:", !!firebaseApiKey);
   if (!firebaseApiKey) return null;
 
   try {
@@ -32,10 +28,7 @@ async function verifyFirebaseUser(request) {
       },
     );
 
-    console.log("Firebase verify response status:", response.status);
     if (!response.ok) {
-      const errBody = await response.text();
-      console.log("Firebase verify error:", errBody);
       return null;
     }
 
@@ -44,22 +37,6 @@ async function verifyFirebaseUser(request) {
   } catch {
     return null;
   }
-}
-
-function exceedsRateLimit(key, limit) {
-  const now = Date.now();
-  const recentRequests = (requestLog.get(key) ?? []).filter(
-    (timestamp) => now - timestamp < rateLimitWindow,
-  );
-
-  if (recentRequests.length >= limit) {
-    requestLog.set(key, recentRequests);
-    return true;
-  }
-
-  recentRequests.push(now);
-  requestLog.set(key, recentRequests);
-  return false;
 }
 
 function getClientIp(request) {
@@ -86,8 +63,6 @@ function isTrustedBrowserRequest(request) {
 }
 
 export async function POST(request) {
-  console.log("POST /api/analyze hit");
-
   if (!isTrustedBrowserRequest(request)) {
     return Response.json({ error: "Request rejected." }, { status: 403 });
   }
@@ -98,19 +73,22 @@ export async function POST(request) {
   }
 
   const clientIp = getClientIp(request);
-  const userRateLimited = exceedsRateLimit(
+  const userLimit = checkRateLimit(
     `user:${userId}`,
     maxUserRequestsPerWindow,
+    rateLimitWindow,
   );
-  const ipRateLimited = exceedsRateLimit(
+  const ipLimit = checkRateLimit(
     `ip:${clientIp}`,
     maxIpRequestsPerWindow,
+    rateLimitWindow,
   );
 
-  if (userRateLimited || ipRateLimited) {
+  if (!userLimit.allowed || !ipLimit.allowed) {
+    const retryAfter = Math.max(userLimit.retryAfter, ipLimit.retryAfter);
     return Response.json(
       { error: "Too many requests. Please wait a minute and try again." },
-      { status: 429 },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } },
     );
   }
 
@@ -141,16 +119,7 @@ export async function POST(request) {
 
   let staticResult;
   try {
-    staticResult = runStaticAnalysis(code, language);
-    console.log("Static analysis result:");
-    console.log("Score:", staticResult.overallScore);
-    console.log("Bugs count:", staticResult.bugs?.length);
-    console.log("Security count:", staticResult.security?.length);
-    console.log("Performance count:", staticResult.performance?.length);
-    console.log("Quality count:", staticResult.quality?.length);
-    console.log("BestPractices count:", staticResult.bestPractices?.length);
-    console.log("First bug:", JSON.stringify(staticResult.bugs?.[0]));
-    staticResult.refactoredCode = refactorCode(code, language, staticResult);
+    staticResult = await reviewCode(code, language);
   } catch (error) {
     console.error("Static code analysis failed:", error);
     return Response.json(
@@ -158,43 +127,5 @@ export async function POST(request) {
       { status: 500 },
     );
   }
-  staticResult.summary = `Code scored ${staticResult.overallScore}/100. Found ${staticResult.bugs.length} bugs, ${staticResult.security.length} security issues, ${staticResult.performance.length} performance issues.`;
-
-  try {
-    const prompt = `Write a 2 sentence professional code quality summary for this ${language} code.
-Score: ${staticResult.overallScore}/100
-Bugs found: ${staticResult.bugs?.length || 0}
-Security issues: ${staticResult.security?.length || 0}
-Performance issues: ${staticResult.performance?.length || 0}
-
-Code:
-${code.slice(0, 500)}`;
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY ?? "")}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-        }),
-        cache: "no-store",
-        signal: AbortSignal.timeout(15000),
-      },
-    );
-
-    if (!geminiResponse.ok) {
-      throw new Error(`Gemini returned status ${geminiResponse.status}`);
-    }
-
-    const geminiData = await geminiResponse.json();
-    const summary = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-    if (summary) staticResult.summary = summary;
-  } catch (error) {
-    console.log(
-      "Gemini failed, using static analysis summary:",
-      error instanceof Error ? error.message : String(error),
-    );
-  }
-
   return Response.json(staticResult);
 }

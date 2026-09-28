@@ -1,10 +1,5 @@
-const githubHeaders = {
-  Accept: "application/vnd.github.v3+json",
-  "X-GitHub-Api-Version": "2022-11-28",
-  ...(process.env.GITHUB_TOKEN
-    ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
-    : {}),
-};
+import { checkRateLimit } from "@/lib/server/rateLimit";
+import { createGitHubClient } from "@/lib/server/githubSnapshot";
 
 const allowedTypes = new Set(["tree", "content", "metadata"]);
 
@@ -40,7 +35,7 @@ function isAllowedGitHubUrl(value, type) {
   try {
     const url = new URL(value);
 
-    if (url.protocol !== "https:" || url.hostname !== "api.github.com") {
+    if (url.protocol !== "https:" || url.hostname !== "api.github.com" || url.username || url.password || url.port || url.hash) {
       return false;
     }
 
@@ -64,6 +59,14 @@ export async function POST(request) {
     return Response.json({ error: "Authentication required." }, { status: 401 });
   }
 
+  const rateLimit = checkRateLimit(`github:${userId}`, 60, 60_000);
+  if (!rateLimit.allowed) {
+    return Response.json(
+      { error: "Too many GitHub requests. Please wait a minute." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfter) } },
+    );
+  }
+
   let body;
 
   try {
@@ -72,7 +75,7 @@ export async function POST(request) {
     return Response.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { url, type } = body;
+  const { url, type } = body ?? {};
 
   if (
     typeof url !== "string" ||
@@ -83,29 +86,14 @@ export async function POST(request) {
   }
 
   try {
-    console.log("GitHub token exists:", !!process.env.GITHUB_TOKEN);
-
-    const response = await fetch(url, {
-      headers: githubHeaders,
-      cache: "no-store",
-      signal: AbortSignal.timeout(15_000),
-    });
-
-    console.log("GitHub response status:", response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log("GitHub error:", errorText);
-
-      return new Response(errorText, {
-        status: response.status,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const data = await response.json();
-
-    return Response.json(data, { status: response.status });
+    const parsed = new URL(url);
+    const [, , owner, repository] = parsed.pathname.split("/");
+    const get = createGitHubClient({ owner, repository, deadline: Date.now() + 10_000 });
+    const metadata = await get("");
+    if (metadata.private !== false) return Response.json({ error: "Only public repositories are supported." }, { status: 404 });
+    const suffix = parsed.pathname.split("/").slice(4).join("/");
+    const data = type === "metadata" ? metadata : await get(`/${suffix}${parsed.search}`);
+    return Response.json(data);
   } catch {
     return Response.json({ error: "GitHub request failed." }, { status: 502 });
   }

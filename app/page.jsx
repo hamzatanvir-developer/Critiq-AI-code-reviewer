@@ -8,6 +8,7 @@ import RepoAnalyzer from "@/components/RepoAnalyzer";
 import ReviewCard from "@/components/ReviewCard";
 import { AuthContext } from "@/context/AuthContext";
 import { saveReview } from "@/services/historyService";
+import { ANALYSIS_VERSION } from "@/lib/analysisVersion";
 
 export default function HomePage() {
   const { user, loading: authLoading } = useContext(AuthContext);
@@ -21,7 +22,6 @@ export default function HomePage() {
   const [analyzedCode, setAnalyzedCode] = useState("");
   const [analyzedLanguage, setAnalyzedLanguage] = useState("");
   const [activeTab, setActiveTab] = useState("code");
-  const [lastAnalysis, setLastAnalysis] = useState(null);
 
   useEffect(() => {
     if (authLoading || !user) {
@@ -29,35 +29,44 @@ export default function HomePage() {
     }
 
     const storageKey = `critiq:last-review:${user.uid}`;
+    let active = true;
 
-    try {
-      const savedReview = window.localStorage.getItem(storageKey);
+    const restoreReview = () => {
+      if (!active) return;
 
-      if (!savedReview) {
-        setResult(null);
-        setAnalyzedCode("");
-        setAnalyzedLanguage("");
-        setReviewSaved(false);
-        return;
+      try {
+        const savedReview = window.localStorage.getItem(storageKey);
+
+        if (!savedReview) {
+          setResult(null);
+          setAnalyzedCode("");
+          setAnalyzedLanguage("");
+          setReviewSaved(false);
+          return;
+        }
+
+        const parsedReview = JSON.parse(savedReview);
+        if (parsedReview.result?.analysisVersion !== ANALYSIS_VERSION) {
+          setResult(null);
+          setAnalyzedCode(parsedReview.code ?? "");
+          setAnalyzedLanguage(parsedReview.language ?? "");
+          setReviewSaved(false);
+          return;
+        }
+        setResult(parsedReview.result ?? null);
+        setAnalyzedCode(parsedReview.code ?? "");
+        setAnalyzedLanguage(parsedReview.language ?? "");
+        setReviewSaved(Boolean(parsedReview.saved));
+      } catch {
+        window.localStorage.removeItem(storageKey);
       }
+    };
 
-      const parsedReview = JSON.parse(savedReview);
-      setResult(parsedReview.result ?? null);
-      setLastAnalysis(
-        parsedReview.result
-          ? {
-              ...parsedReview.result,
-              code: parsedReview.code ?? "",
-              language: parsedReview.language ?? "",
-            }
-          : null,
-      );
-      setAnalyzedCode(parsedReview.code ?? "");
-      setAnalyzedLanguage(parsedReview.language ?? "");
-      setReviewSaved(Boolean(parsedReview.saved));
-    } catch {
-      window.localStorage.removeItem(storageKey);
-    }
+    const restoreTimer = window.setTimeout(restoreReview, 0);
+    return () => {
+      active = false;
+      window.clearTimeout(restoreTimer);
+    };
   }, [authLoading, user]);
 
   async function handleAnalyze(code, language) {
@@ -69,33 +78,19 @@ export default function HomePage() {
     setReviewSaved(false);
 
     try {
-      const isAnalyzingRefactored =
-        lastAnalysis &&
-        lastAnalysis.refactoredCode &&
-        code.trim() === String(lastAnalysis.refactoredCode).trim();
-      const requestBody = {
-        code,
-        language,
-        ...(isAnalyzingRefactored && { originalAnalysis: lastAnalysis }),
-      };
+      const requestBody = { code, language };
       if (!user) {
         setError("Authentication required. Please sign in again.");
         return;
       }
 
-      try {
-        const token = await user.getIdToken();
-        console.log("Token exists:", !!token);
-        console.log("Token length:", token?.length);
-      } catch (tokenError) {
-        console.log("Token error:", tokenError.message);
-      }
+      const token = await user.getIdToken();
 
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${await user.getIdToken()}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestBody),
         cache: "no-store",
@@ -116,7 +111,6 @@ export default function HomePage() {
       setAnalyzedCode(code);
       setAnalyzedLanguage(language);
       setResult(analysis);
-      setLastAnalysis({ ...analysis, code, language });
 
       if (user) {
         try {
@@ -134,8 +128,12 @@ export default function HomePage() {
           .getElementById('review-section')
           ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 200);
-    } catch {
-      setError("Unable to analyze the code. Please try again.");
+    } catch (analysisError) {
+      setError(
+        analysisError instanceof Error
+          ? analysisError.message
+          : "Unable to analyze the code. Please try again.",
+      );
     } finally {
       const remainingAnimationTime = 1800 - (Date.now() - loadingStartedAt);
 
@@ -215,7 +213,7 @@ export default function HomePage() {
   }
 
   if (!user) {
-    const headingText = "AI-powered code review for every developer.";
+    const headingText = "Static code review for every developer.";
     const words = headingText.split(" ");
 
     return (
@@ -223,7 +221,7 @@ export default function HomePage() {
         <section className="flex flex-1 flex-col items-center justify-center px-4 text-center">
           <h1 className="mb-4 text-center text-3xl font-bold leading-tight text-white sm:text-5xl md:text-7xl">
   <span className="block">
-    {"AI-powered code".split("").map((char, i) => (
+    {"Rule-based code".split("").map((char, i) => (
       <span key={i} className="inline-block" style={{ animation: "wave 2s ease-in-out infinite", animationDelay: `${i * 0.04}s` }}>
         {char === ' ' ? '\u00A0' : char}
       </span>

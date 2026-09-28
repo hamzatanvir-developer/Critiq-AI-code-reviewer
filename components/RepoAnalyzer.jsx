@@ -1,9 +1,9 @@
 "use client";
 
 import { useContext, useState } from "react";
-import { getAuth } from "firebase/auth";
 
 import { AuthContext } from "@/context/AuthContext";
+import BackgroundRepoScan from "./BackgroundRepoScan";
 
 const severityStyles = {
   high: "border-red-400/30 bg-red-400/10 text-red-300",
@@ -68,6 +68,7 @@ function DetailGroup({ title, items, accent = "text-[#f5f5f5]" }) {
 
 export default function RepoAnalyzer() {
   const { user } = useContext(AuthContext);
+  const [scanMode, setScanMode] = useState("quick");
   const [repoUrl, setRepoUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -93,8 +94,7 @@ export default function RepoAnalyzer() {
     setLoading(true);
     try {
       setProgress("Mapping the repository and analyzing critical files...");
-      const auth = getAuth();
-      const token = await auth.currentUser?.getIdToken();
+      const token = await user.getIdToken();
       const response = await fetch("/api/analyze-repo", {
         method: "POST",
         headers: {
@@ -104,8 +104,13 @@ export default function RepoAnalyzer() {
         body: JSON.stringify({ repoUrl: repoUrl.trim() }),
         cache: "no-store",
       });
-      const data = response.ok ? await response.json() : null;
-      if (!data) throw new Error("The repository report could not be generated. Try again shortly.");
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(
+          data?.error || "The repository report could not be generated. Try again shortly.",
+        );
+      }
+      if (!data) throw new Error("The repository returned an invalid response.");
       setMetadata(data.repoMetadata ?? null);
       setResult(data);
     } catch (analysisError) {
@@ -138,8 +143,14 @@ export default function RepoAnalyzer() {
     : 100;
   const totalHealthFiles = Math.max(1, reportSummary.totalFiles ?? 0);
 
+  const scanSwitcher = <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label="Repository scan mode">
+    {[ ["quick", "Quick scan (20 files)"], ["background", "Background scan"] ].map(([mode, label]) => <button key={mode} type="button" disabled={loading} onClick={() => setScanMode(mode)} aria-pressed={scanMode === mode} className={`rounded-xl border border-[#2a2a2a] px-4 py-2 text-sm ${scanMode === mode ? "bg-[#f5f5f5] text-[#111111]" : "text-[#a0a0a0]"}`}>{label}</button>)}
+  </div>;
+  if (scanMode === "background") return <section className="mx-auto w-full max-w-7xl">{scanSwitcher}<BackgroundRepoScan key={user?.uid ?? "anonymous"} user={user} /></section>;
+
   return (
     <section className="mx-auto w-full max-w-7xl text-[#f5f5f5]">
+      {scanSwitcher}
       <form
         onSubmit={analyzeRepository}
         className="rounded-2xl border border-[#2a2a2a] bg-[#161616] p-4 sm:p-6"
@@ -199,9 +210,14 @@ export default function RepoAnalyzer() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">Repository Overview</p>
-                <h2 className="mt-2 text-2xl font-black">The complete repository at a glance</h2>
+                <h2 className="mt-2 text-2xl font-black">Repository coverage</h2>
+                {result.commitSha && <p className="mt-2 break-all font-mono text-xs text-[#a0a0a0]">Commit: {result.commitSha}</p>}
               </div>
-              <p className="text-xs text-[#707070]">Showing top 20 most critical files</p>
+              <p className="text-xs text-[#a0a0a0]">Sample review: up to 20 prioritized files, not a full repository audit. Unsupported, unreadable and oversized files are not analyzed.</p>
+              <p className="mt-2 text-xs text-[#a0a0a0]">JavaScript/React use ESLint, Python uses Ruff, and Java/C++ use syntax-tree checks. Java and C++ are not compiler-verified; project-wide type and lifetime analysis is not included.</p>
+              {result.fullRepoOverview?.treeTruncated && (
+                <p className="mt-2 text-xs text-amber-400">Tree discovery was incomplete. File totals are lower bounds. {fullRepoOverview.incompleteReasons?.join(", ")}</p>
+              )}
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -259,9 +275,9 @@ export default function RepoAnalyzer() {
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-[#a0a0a0]">
                   {metadata?.description || "No repository description provided."}
                 </p>
-                {result.aiSummary && (
+                {(result.projectSummary || result.aiSummary) && (
                   <p className="mt-4 max-w-4xl border-l-2 border-green-400/50 pl-4 text-sm leading-7 text-[#d0d0d0]">
-                    {result.aiSummary}
+                    {result.projectSummary || result.aiSummary}
                   </p>
                 )}
               </div>

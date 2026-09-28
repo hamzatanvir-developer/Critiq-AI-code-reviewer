@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import {
   loginUser,
@@ -27,13 +27,10 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  const value = {
-    user,
-    loading,
-    loginUser,
-    registerUser,
-    logoutUser,
-  };
+  const value = useMemo(
+    () => ({ user, loading, loginUser, registerUser, logoutUser }),
+    [loading, user],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -6,18 +6,33 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
+    "@astral-sh/ruff-wasm-nodejs": "0.16.8",
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
     "firebase": "^12.17.1",
-    "next": "16.3.0",
+    "firebase-admin": "14.5.0",
+    "globals": "14.0.0",
+    "inngest": "4.21.0",
+    "next": "16.3.6",
+    "prettier": "3.9.9",
+    "prettier-plugin-java": "2.11.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "tree-sitter-cpp": "0.23.4",
+    "web-tree-sitter": "0.27.0"
+  },
+  "overrides": {
+    "gaxios@6": { "uuid": "11.1.1" }
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "eslint": "^9",
-    "eslint-config-next": "16.3.0",
+    "eslint-config-next": "16.3.6",
     "tailwindcss": "^4"
   }
 }

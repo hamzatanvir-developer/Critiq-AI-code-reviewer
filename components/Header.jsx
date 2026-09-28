@@ -9,8 +9,12 @@ export default function Header() {
   const router = useRouter()
 
   const handleLogout = async () => {
-    await logoutUser()
-    router.push('/')
+    try {
+      await logoutUser()
+      router.replace('/')
+    } catch {
+      // Firebase keeps the current session when sign-out fails.
+    }
   }
 
   const getInitial = (email) => {

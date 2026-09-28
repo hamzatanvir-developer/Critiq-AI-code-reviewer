@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import { AuthContext } from "@/context/AuthContext";
 
 export default function AuthPage() {
-  const { loginUser, registerUser } = useContext(AuthContext);
+  const { user, loading: authLoading, loginUser, registerUser } = useContext(AuthContext);
   const router = useRouter();
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
@@ -16,6 +16,10 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   const isLogin = mode === "login";
+
+  useEffect(() => {
+    if (!authLoading && user) router.replace("/");
+  }, [authLoading, router, user]);
 
   function toggleMode() {
     setMode(isLogin ? "register" : "login");
@@ -32,6 +36,11 @@ export default function AuthPage() {
       return;
     }
 
+    if (!isLogin && password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -43,7 +52,14 @@ export default function AuthPage() {
 
       router.push("/");
     } catch (authError) {
-      setError(authError.message || "Authentication failed. Please try again.");
+      const messages = {
+        "auth/email-already-in-use": "An account already exists for this email.",
+        "auth/invalid-credential": "Incorrect email or password.",
+        "auth/invalid-email": "Enter a valid email address.",
+        "auth/too-many-requests": "Too many attempts. Please wait and try again.",
+        "auth/weak-password": "Choose a stronger password with at least 8 characters.",
+      };
+      setError(messages[authError?.code] || "Authentication failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -122,6 +138,7 @@ export default function AuthPage() {
               onChange={(event) => setPassword(event.target.value)}
               autoComplete={isLogin ? "current-password" : "new-password"}
               required
+              minLength={isLogin ? undefined : 8}
               className="w-full rounded-lg border border-[#2a2a2a] bg-[#111111] px-4 py-3 text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-[#f5f5f5]"
             />
           </div>
@@ -141,6 +158,7 @@ export default function AuthPage() {
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 autoComplete="new-password"
                 required
+                minLength={8}
                 className="w-full rounded-lg border border-[#2a2a2a] bg-[#111111] px-4 py-3 text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-[#f5f5f5]"
               />
             </div>

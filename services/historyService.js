@@ -15,7 +15,6 @@ export async function saveReview(userId, reviewData) {
   const reviewFingerprint = JSON.stringify({
     code: reviewData.code,
     language: reviewData.language,
-    result: reviewData.result,
   });
   const digest = await crypto.subtle.digest(
     "SHA-256",
