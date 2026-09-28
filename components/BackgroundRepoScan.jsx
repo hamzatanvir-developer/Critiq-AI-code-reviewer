@@ -27,7 +27,10 @@ export default function BackgroundRepoScan({ user }) {
       signal: options.signal ?? AbortSignal.timeout(15_000),
     });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Request failed.");
+    if (!response.ok) {
+      if (data.job) setJob(data.job);
+      throw new Error(data.error || "Request failed.");
+    }
     return data;
   }
 
@@ -48,7 +51,7 @@ export default function BackgroundRepoScan({ user }) {
         if (!disposed) {
           if (!response.ok)
             setError(data.error || "Unable to restore the last scan.");
-          else setJob(data.job);
+          else setJob((current) => current ?? data.job);
         }
       } catch {
         if (!disposed)
@@ -63,7 +66,12 @@ export default function BackgroundRepoScan({ user }) {
   }, [user]);
 
   useEffect(() => {
-    if (!activeJobId || ["completed", "cancelled", "failed"].includes(activeJobStatus) || !user) return;
+    if (
+      !activeJobId ||
+      ["completed", "cancelled", "failed"].includes(activeJobStatus) ||
+      !user
+    )
+      return;
     let disposed = false;
     let timer;
     const controller = new AbortController();
@@ -79,6 +87,7 @@ export default function BackgroundRepoScan({ user }) {
         if (!response.ok)
           throw new Error(data.error || "Progress update failed.");
         setJob(data.job);
+        setError("");
         if (!isTerminal(data.job)) timer = setTimeout(poll, 5000);
       } catch (err) {
         if (!disposed) {

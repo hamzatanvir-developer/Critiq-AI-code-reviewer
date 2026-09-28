@@ -86,4 +86,4 @@ The larger-repository roadmap (cross-job caching and dedicated worker isolation 
 
 There is no unlimited-resource guarantee and no guarantee of “perfect” refactored code. Rule checks, coverage, uncertainties and manual work must remain visible.
 
-Re
+Reference: [ESLint integration API](https://eslint.org/docs/latest/integrate/nodejs-api), [no-var fixer limitations](https://eslint.org/docs/latest/rules/no-var).

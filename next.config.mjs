@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Node-based analysis libraries must not be bundled as browser/edge code.
-  serverExternalPackages: ["eslint", "eslint-plugin-react", "eslint-plugin-react-hooks", "@astral-sh/ruff-wasm-nodejs", "web-tree-sitter", "prettier", "prettier-plugin-java"],
+  serverExternalPackages: ["eslint", "eslint-plugin-react", "eslint-plugin-react-hooks", "@astral-sh/ruff-wasm-nodejs", "web-tree-sitter", "prettier", "prettier-plugin-java", "firebase-admin", "inngest"],
   outputFileTracingIncludes: {
     "/api/inngest": [
       "./node_modules/prettier-plugin-java/dist/tree-sitter-java_orchard.wasm",
